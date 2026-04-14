@@ -1,0 +1,49 @@
+{% extends "base.html" %}
+
+{% block title %}Create Department - Admin{% endblock %}
+
+{% block content %}
+<div class="py-4">
+    <h1 class="mb-4">
+        <i class="bi bi-plus-circle"></i> Create New Department
+    </h1>
+    
+    <div class="row justify-content-center">
+        <div class="col-lg-6">
+            <div class="card shadow">
+                <div class="card-body p-4">
+                    <form method="POST" novalidate>
+                        {{ form.hidden_tag() }}
+                        
+                        <div class="mb-3">
+                            <label class="form-label" for="name">Department Name</label>
+                            {{ form.name(class="form-control" + (" is-invalid" if form.name.errors else ""), 
+                                        placeholder="e.g., Master of Computer Application") }}
+                            {% if form.name.errors %}
+                                <div class="invalid-feedback d-block">
+                                    {% for error in form.name.errors %}{{ error }}<br>{% endfor %}
+                                </div>
+                            {% endif %}
+                        </div>
+                        
+                        <div class="mb-3">
+                            <label class="form-label" for="code">Department Code</label>
+                            {{ form.code(class="form-control" + (" is-invalid" if form.code.errors else ""), 
+                                        placeholder="e.g., MCA") }}
+                            {% if form.code.errors %}
+                                <div class="invalid-feedback d-block">
+                                    {% for error in form.code.errors %}{{ error }}<br>{% endfor %}
+                                </div>
+                            {% endif %}
+                        </div>
+                        
+                        <div class="d-grid gap-2">
+                            {{ form.submit(class="btn btn-primary btn-lg") }}
+                        </div>
+                    </form>
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+{% endblock %}

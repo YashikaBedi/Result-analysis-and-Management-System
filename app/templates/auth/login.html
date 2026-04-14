@@ -1,0 +1,115 @@
+{% extends "base.html" %}
+
+{% block title %}Login - JIMS SEC-5 Exam Management{% endblock %}
+
+{% block auth_content %}
+<div class="auth-card">
+    <!-- Logo & Header -->
+    <div class="auth-header text-center mb-5">
+        <div class="logo-circle-large mb-3">
+            <i class="bi bi-mortarboard-fill"></i>
+        </div>
+        <h1 class="fw-bold mb-2">JIMS SEC-5</h1>
+        <p class="text-light opacity-75">Exam Management System</p>
+    </div>
+
+    <!-- Form Card -->
+    <div class="card border-0 shadow-lg" style="border-radius: 16px;">
+        <div class="card-body p-5">
+            <h3 class="card-title text-center mb-4 fw-bold">Welcome Back</h3>
+            
+            <form method="POST" novalidate>
+                {{ form.hidden_tag() }}
+                
+                <!-- Username Field -->
+                <div class="mb-4">
+                    <label class="form-label">Username</label>
+                    {{ form.username(class="form-control form-control-lg" + (" is-invalid" if form.username.errors else ""), 
+                                    placeholder="Enter your username") }}
+                    {% if form.username.errors %}
+                        <div class="invalid-feedback d-block mt-2">
+                            <i class="bi bi-exclamation-circle"></i> {% for error in form.username.errors %}{{ error }}{% endfor %}
+                        </div>
+                    {% endif %}
+                </div>
+                
+                <!-- Password Field -->
+                <div class="mb-4">
+                    <label class="form-label">Password</label>
+                    {{ form.password(class="form-control form-control-lg" + (" is-invalid" if form.password.errors else ""), 
+                                    placeholder="Enter your password") }}
+                    {% if form.password.errors %}
+                        <div class="invalid-feedback d-block mt-2">
+                            <i class="bi bi-exclamation-circle"></i> {% for error in form.password.errors %}{{ error }}{% endfor %}
+                        </div>
+                    {% endif %}
+                </div>
+                
+                <!-- Submit Button -->
+                <div class="d-grid gap-2 mb-4">
+                    {{ form.submit(class="btn btn-primary btn-lg fw-bold") }}
+                </div>
+                
+                <!-- Divider -->
+                <div class="d-flex align-items-center mb-4">
+                    <hr class="flex-grow-1">
+                    <span class="mx-3 text-muted small">New to JIMS?</span>
+                    <hr class="flex-grow-1">
+                </div>
+                
+                <!-- Register Link -->
+                <p class="text-center mb-0">
+                    Don't have an account? 
+                    <a href="{{ url_for('auth.register') }}" class="fw-bold text-decoration-none" style="color: var(--primary);">Create one now</a>
+                </p>
+            </form>
+        </div>
+    </div>
+
+    <!-- Footer Info -->
+    <p class="text-center text-light opacity-75 small mt-4">
+        Demo credentials: admin / admin123
+    </p>
+</div>
+
+<style>
+    .auth-card {
+        width: 100%;
+        max-width: 420px;
+    }
+
+    .logo-circle-large {
+        width: 80px;
+        height: 80px;
+        background: rgba(255, 255, 255, 0.15);
+        border-radius: 20px;
+        display: flex;
+        align-items: center;
+        justify-content: center;
+        font-size: 2.5rem;
+        color: white;
+        margin: 0 auto;
+        backdrop-filter: blur(10px);
+    }
+
+    .auth-header h1 {
+        color: white;
+        font-size: 2rem;
+        letter-spacing: -0.5px;
+    }
+
+    .auth-header p {
+        font-size: 1rem;
+    }
+
+    .form-control-lg {
+        height: 48px;
+        font-size: 0.95rem;
+    }
+
+    .invalid-feedback {
+        color: #ef4444 !important;
+        font-size: 0.85rem;
+    }
+</style>
+{% endblock %}

@@ -1,0 +1,95 @@
+{% extends "base.html" %}
+
+{% block title %}Course Analytics - Exam Management System{% endblock %}
+
+{% block content %}
+<div class="py-4">
+    <h1 class="mb-4">
+        <i class="bi bi-graph-up"></i> Analytics - {{ course.course_name }}
+    </h1>
+    
+    <div class="mb-3">
+        <p class="text-muted">
+            <strong>Course Code:</strong> {{ course.course_code }} | 
+            <strong>Program:</strong> {{ course.program.department.name }} (Sem {{ course.program.semester }})
+        </p>
+    </div>
+    
+    {% if analytics %}
+    <div class="row mb-4">
+        <div class="col-md-4 mb-3">
+            <div class="card text-center">
+                <div class="card-body">
+                    <h5 class="card-title text-muted">Total Students</h5>
+                    <h2 class="text-primary">{{ analytics.total_students }}</h2>
+                </div>
+            </div>
+        </div>
+        <div class="col-md-4 mb-3">
+            <div class="card text-center">
+                <div class="card-body">
+                    <h5 class="card-title text-muted">Class Average</h5>
+                    <h2 class="text-info">{{ analytics.average }}/100</h2>
+                </div>
+            </div>
+        </div>
+        <div class="col-md-4 mb-3">
+            <div class="card text-center">
+                <div class="card-body">
+                    <h5 class="card-title text-muted">Pass Rate</h5>
+                    <h2 class="text-success">{{ analytics.pass_rate }}%</h2>
+                </div>
+            </div>
+        </div>
+    </div>
+    
+    <div class="row">
+        <div class="col-md-6 mb-4">
+            <div class="card">
+                <div class="card-header bg-primary text-white">
+                    <i class="bi bi-bar-chart"></i> Statistics
+                </div>
+                <div class="card-body">
+                    <p><strong>Median Score:</strong> {{ analytics.median }}/100</p>
+                    <p><strong>Highest Score:</strong> {{ analytics.max }}/100</p>
+                    <p><strong>Lowest Score:</strong> {{ analytics.min }}/100</p>
+                    <p><strong>Passed:</strong> {{ analytics.pass_count }}/{{ analytics.total_students }}</p>
+                    <p><strong>Failed:</strong> {{ analytics.total_students - analytics.pass_count }}/{{ analytics.total_students }}</p>
+                </div>
+            </div>
+        </div>
+        
+        <div class="col-md-6 mb-4">
+            <div class="card">
+                <div class="card-header bg-success text-white">
+                    <i class="bi bi-pie-chart"></i> Grade Distribution
+                </div>
+                <div class="card-body">
+                    {% if analytics.grade_distribution %}
+                        <ul class="list-unstyled">
+                            {% for grade, count in analytics.grade_distribution.items() %}
+                            <li class="mb-2">
+                                <strong>{{ grade }}:</strong> 
+                                <span class="badge bg-info">{{ count }} students</span>
+                                <div class="progress mt-1" style="height: 20px;">
+                                    <div class="progress-bar" style="width: {{ (count / analytics.total_students * 100)|int }}%">
+                                        {{ (count / analytics.total_students * 100)|int }}%
+                                    </div>
+                                </div>
+                            </li>
+                            {% endfor %}
+                        </ul>
+                    {% else %}
+                        <p class="text-muted">No grade data available</p>
+                    {% endif %}
+                </div>
+            </div>
+        </div>
+    </div>
+    {% else %}
+        <div class="alert alert-info">
+            No analytics data available for this course yet.
+        </div>
+    {% endif %}
+</div>
+{% endblock %}

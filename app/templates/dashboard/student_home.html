@@ -1,0 +1,286 @@
+{% extends "base.html" %}
+
+{% block title %}Student Dashboard - JIMS SEC-5{% endblock %}
+
+{% block content %}
+<!-- Hero Section -->
+<div class="hero-section">
+    <div class="container">
+        <div class="hero-content">
+            <h1>Your Academic Dashboard</h1>
+            <p>Track your progress and exam results</p>
+            <p class="hero-tagline">Welcome, {{ current_user.full_name }}</p>
+        </div>
+    </div>
+</div>
+
+<!-- Statistics Section -->
+<div class="container stats-section">
+    <div class="row g-4">
+        <div class="col-md-3 col-sm-6">
+            <div class="stat-box">
+                <div class="stat-number">{{ stats.total_courses if stats else 0 }}</div>
+                <div class="stat-label">Total Courses</div>
+            </div>
+        </div>
+        <div class="col-md-3 col-sm-6">
+            <div class="stat-box">
+                <div class="stat-number">{{ stats.passed_courses if stats else 0 }}</div>
+                <div class="stat-label">Passed</div>
+            </div>
+        </div>
+        <div class="col-md-3 col-sm-6">
+            <div class="stat-box">
+                <div class="stat-number">{{ stats.failed_courses if stats else 0 }}</div>
+                <div class="stat-label">Failed</div>
+            </div>
+        </div>
+        <div class="col-md-3 col-sm-6">
+            <div class="stat-box">
+                <div class="stat-number">{{ (stats.gpa if stats else 0)|round(2) }}</div>
+                <div class="stat-label">GPA</div>
+            </div>
+        </div>
+    </div>
+</div>
+
+<!-- Main Dashboard Content -->
+<div class="container mt-5 mb-5">
+    <div class="row">
+        <!-- Performance Section -->
+        <div class="col-lg-8 mb-4">
+            <div class="card border-0 shadow-sm">
+                <div class="card-header bg-light">
+                    <h5 class="mb-0 fw-bold">
+                        <i class="bi bi-graph-up"></i> Your Performance
+                    </h5>
+                </div>
+                <div class="card-body">
+                    <div class="row">
+                        <div class="col-md-6 mb-4">
+                            <h6 class="text-muted text-uppercase small fw-bold mb-3">Average Marks</h6>
+                            <div class="d-flex align-items-center">
+                                <div class="display-4 fw-bold text-primary">{{ stats.average_marks if stats else 0 }}</div>
+                                <span class="text-muted ms-2">/100</span>
+                            </div>
+                            <p class="text-muted small mt-2">Class Average: Excellent Performance</p>
+                        </div>
+                        <div class="col-md-6 mb-4">
+                            <h6 class="text-muted text-uppercase small fw-bold mb-3">Completion Rate</h6>
+                            <div class="progress" style="height: 30px;">
+                                {% set completion = (stats.passed_courses * 100 / stats.total_courses) if stats and stats.total_courses > 0 else 0 %}
+                                <div class="progress-bar bg-success" role="progressbar" 
+                                     style="width: {{ completion }}%;" 
+                                     aria-valuenow="{{ completion }}" aria-valuemin="0" aria-valuemax="100">
+                                    {{ (completion|round)|int }}%
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+
+            <!-- Recent Results -->
+            <div class="card border-0 shadow-sm mt-4">
+                <div class="card-header bg-light">
+                    <h5 class="mb-0 fw-bold">
+                        <i class="bi bi-file-earmark-text"></i> Recent Results
+                    </h5>
+                </div>
+                <div class="card-body">
+                    {% if results %}
+                        <div class="table-responsive">
+                            <table class="table table-hover mb-0">
+                                <thead>
+                                    <tr>
+                                        <th>Course</th>
+                                        <th>Internal</th>
+                                        <th>External</th>
+                                        <th>Total</th>
+                                        <th>Grade</th>
+                                    </tr>
+                                </thead>
+                                <tbody>
+                                    {% for result in results[:5] %}
+                                    <tr>
+                                        <td>
+                                            <strong>{{ result.course.name if result.course else 'N/A' }}</strong>
+                                        </td>
+                                        <td>{{ result.internal_marks if result.internal_marks else '-' }}</td>
+                                        <td>{{ result.external_marks if result.external_marks else '-' }}</td>
+                                        <td><strong>{{ result.total_marks if result.total_marks else '-' }}</strong></td>
+                                        <td>
+                                            <span class="badge bg-success">{{ result.grade if result.grade else '-' }}</span>
+                                        </td>
+                                    </tr>
+                                    {% endfor %}
+                                </tbody>
+                            </table>
+                        </div>
+                        {% if results|length > 5 %}
+                        <div class="text-center mt-3">
+                            <a href="{{ url_for('results.view_results') }}" class="btn btn-sm btn-outline-primary">
+                                View All Results →
+                            </a>
+                        </div>
+                        {% endif %}
+                    {% else %}
+                        <p class="text-muted text-center py-5">
+                            <i class="bi bi-inbox"></i><br>
+                            No results available yet. Check back soon!
+                        </p>
+                    {% endif %}
+                </div>
+            </div>
+        </div>
+
+        <!-- Quick Actions & Features -->
+        <div class="col-lg-4 mb-4">
+            <!-- Quick Actions -->
+            <div class="card border-0 shadow-sm mb-4">
+                <div class="card-header bg-light">
+                    <h5 class="mb-0 fw-bold">
+                        <i class="bi bi-lightning"></i> Quick Actions
+                    </h5>
+                </div>
+                <div class="card-body">
+                    <a href="{{ url_for('results.view_results') }}" class="btn btn-primary w-100 mb-2">
+                        <i class="bi bi-bar-chart"></i> View All Results
+                    </a>
+                    <a href="{{ url_for('dashboard.profile') }}" class="btn btn-outline-primary w-100">
+                        <i class="bi bi-person"></i> Edit Profile
+                    </a>
+                </div>
+            </div>
+
+            <!-- Key Info -->
+            <div class="card border-0 shadow-sm">
+                <div class="card-header bg-light">
+                    <h5 class="mb-0 fw-bold">
+                        <i class="bi bi-info-circle"></i> Your Info
+                    </h5>
+                </div>
+                <div class="card-body">
+                    <div class="mb-3">
+                        <label class="text-muted small">Email</label>
+                        <p class="fw-bold">{{ current_user.email }}</p>
+                    </div>
+                    <div class="mb-3">
+                        <label class="text-muted small">Role</label>
+                        <p class="fw-bold">
+                            <span class="badge bg-info text-uppercase">{{ current_user.role }}</span>
+                        </p>
+                    </div>
+                    <div>
+                        <label class="text-muted small">Status</label>
+                        <p class="fw-bold">
+                            {% if current_user.is_active %}
+                                <span class="badge bg-success">Active</span>
+                            {% else %}
+                                <span class="badge bg-danger">Inactive</span>
+                            {% endif %}
+                        </p>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+
+<style>
+.hero-section {
+    animation: fadeInDown 0.8s ease-out;
+}
+
+.stats-section .stat-box {
+    animation: slideInUp 0.6s ease-out;
+}
+
+@keyframes fadeInDown {
+    from {
+        opacity: 0;
+        transform: translateY(-20px);
+    }
+    to {
+        opacity: 1;
+        transform: translateY(0);
+    }
+}
+
+@keyframes slideInUp {
+    from {
+        opacity: 0;
+        transform: translateY(30px);
+    }
+    to {
+        opacity: 1;
+        transform: translateY(0);
+    }
+}
+
+.table-responsive {
+    border-radius: 8px;
+}
+</style>
+                    <i class="bi bi-briefcase"></i> Placement Prep Average
+                </div>
+                <div class="card-body">
+                    <h4>{{ stats.placement_average if stats else 0 }}/100</h4>
+                    <p class="text-muted">Overall placement readiness score</p>
+                </div>
+            </div>
+        </div>
+    </div>
+    
+    <div class="card mt-4">
+        <div class="card-header bg-dark text-white">
+            <i class="bi bi-file-text"></i> Recent Results
+        </div>
+        <div class="table-responsive">
+            <table class="table mb-0">
+                <thead>
+                    <tr>
+                        <th>Course Code</th>
+                        <th>Course Name</th>
+                        <th>Internal</th>
+                        <th>External</th>
+                        <th>Total</th>
+                        <th>Grade</th>
+                        <th>Status</th>
+                    </tr>
+                </thead>
+                <tbody>
+                    {% if results %}
+                        {% for result in results[:5] %}
+                        <tr>
+                            <td>{{ result.course.course_code if result.course else 'N/A' }}</td>
+                            <td>{{ result.course.course_name if result.course else 'N/A' }}</td>
+                            <td>{{ result.internal_total }}</td>
+                            <td>{{ result.external_marks }}</td>
+                            <td>{{ result.academic_total }}</td>
+                            <td><span class="badge bg-info">{{ result.grade }}</span></td>
+                            <td>
+                                {% if result.pass_fail == 'Pass' %}
+                                    <span class="badge bg-success">Pass</span>
+                                {% else %}
+                                    <span class="badge bg-danger">Fail</span>
+                                {% endif %}
+                            </td>
+                        </tr>
+                        {% endfor %}
+                    {% else %}
+                        <tr>
+                            <td colspan="7" class="text-center text-muted">No results yet</td>
+                        </tr>
+                    {% endif %}
+                </tbody>
+            </table>
+        </div>
+        <div class="card-footer">
+            <a href="{{ url_for('results.view_results') }}" class="btn btn-primary btn-sm">
+                <i class="bi bi-arrow-right"></i> View All Results
+            </a>
+        </div>
+    </div>
+</div>
+{% endblock %}

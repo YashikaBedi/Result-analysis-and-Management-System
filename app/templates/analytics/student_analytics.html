@@ -1,0 +1,98 @@
+{% extends "base.html" %}
+
+{% block title %}Student Analytics - Exam Management System{% endblock %}
+
+{% block content %}
+<div class="py-4">
+    <h1 class="mb-4">
+        <i class="bi bi-graph-up"></i> Analytics - {{ student.user.full_name }}
+    </h1>
+    
+    <div class="row mb-4">
+        <div class="col-md-3 mb-3">
+            <div class="card text-center">
+                <div class="card-body">
+                    <h5 class="card-title text-muted">GPA</h5>
+                    <h2 class="text-primary">{{ gpa }}</h2>
+                </div>
+            </div>
+        </div>
+        <div class="col-md-3 mb-3">
+            <div class="card text-center">
+                <div class="card-body">
+                    <h5 class="card-title text-muted">Average Score</h5>
+                    <h2 class="text-info">{{ stats.average_marks if stats else 0 }}/100</h2>
+                </div>
+            </div>
+        </div>
+        <div class="col-md-3 mb-3">
+            <div class="card text-center">
+                <div class="card-body">
+                    <h5 class="card-title text-muted">Pass Rate</h5>
+                    <h2 class="text-success">
+                        {% if stats and stats.total_courses > 0 %}
+                            {{ (stats.passed_courses / stats.total_courses * 100)|int }}%
+                        {% else %}
+                            -
+                        {% endif %}
+                    </h2>
+                </div>
+            </div>
+        </div>
+        <div class="col-md-3 mb-3">
+            <div class="card text-center">
+                <div class="card-body">
+                    <h5 class="card-title text-muted">Placement Prep</h5>
+                    <h2 class="text-warning">{{ stats.placement_average if stats else 0 }}/100</h2>
+                </div>
+            </div>
+        </div>
+    </div>
+    
+    <div class="card">
+        <div class="card-header bg-dark text-white">
+            <i class="bi bi-table"></i> Detailed Results
+        </div>
+        <div class="table-responsive">
+            <table class="table mb-0">
+                <thead>
+                    <tr>
+                        <th>Course Code</th>
+                        <th>Internal</th>
+                        <th>External</th>
+                        <th>Total</th>
+                        <th>Grade</th>
+                        <th>Status</th>
+                    </tr>
+                </thead>
+                <tbody>
+                    {% if results %}
+                        {% for result in results %}
+                        {% if result.examination_type == 'internal' %}
+                        <tr>
+                            <td>{{ result.course.course_code if result.course else 'N/A' }}</td>
+                            <td>{{ result.internal_total }}</td>
+                            <td>{{ result.external_marks }}</td>
+                            <td><strong>{{ result.academic_total }}</strong></td>
+                            <td><span class="badge bg-info">{{ result.grade }}</span></td>
+                            <td>
+                                {% if result.pass_fail == 'Pass' %}
+                                    <span class="badge bg-success">PASS</span>
+                                {% else %}
+                                    <span class="badge bg-danger">FAIL</span>
+                                {% endif %}
+                            </td>
+                        </tr>
+                        {% endif %}
+                        {% endfor %}
+                    {% else %}
+                        <tr>
+                            <td colspan="6" class="text-center text-muted py-4">No results available</td>
+                        </tr>
+                    {% endif %}
+                </tbody>
+            </table>
+        </div>
+    </div>
+</div>
+{% endblock %}

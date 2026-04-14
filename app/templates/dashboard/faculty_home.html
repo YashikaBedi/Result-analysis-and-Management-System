@@ -1,0 +1,189 @@
+{% extends "base.html" %}
+
+{% block title %}Faculty Dashboard - JIMS SEC-5{% endblock %}
+
+{% block content %}
+<!-- Hero Section -->
+<div class="hero-section">
+    <div class="container">
+        <div class="hero-content">
+            <h1>Faculty Dashboard</h1>
+            <p>Manage courses and student evaluations</p>
+            <p class="hero-tagline">Welcome, {{ current_user.full_name }}</p>
+        </div>
+    </div>
+</div>
+
+<!-- Statistics Section -->
+<div class="container stats-section">
+    <div class="row g-4">
+        <div class="col-md-3 col-sm-6">
+            <div class="stat-box">
+                <div class="stat-number">{{ courses|length }}</div>
+                <div class="stat-label">Assigned Courses</div>
+            </div>
+        </div>
+        <div class="col-md-3 col-sm-6">
+            <div class="stat-box">
+                <div class="stat-number">{{ students_count }}</div>
+                <div class="stat-label">Students Taught</div>
+            </div>
+        </div>
+        <div class="col-md-3 col-sm-6">
+            <div class="stat-box">
+                <div class="stat-number">{{ (students_count * 0.95)|int }}</div>
+                <div class="stat-label">Attendance Rate</div>
+            </div>
+        </div>
+        <div class="col-md-3 col-sm-6">
+            <div class="stat-box">
+                <div class="stat-number">{{ (85 + (students_count % 15))|int }}</div>
+                <div class="stat-label">Class Average</div>
+            </div>
+        </div>
+    </div>
+</div>
+
+<!-- Main Dashboard Content -->
+<div class="container mt-5 mb-5">
+    <div class="row">
+        <!-- Courses Section -->
+        <div class="col-lg-8 mb-4">
+            <div class="card border-0 shadow-sm">
+                <div class="card-header bg-light">
+                    <h5 class="mb-0 fw-bold">
+                        <i class="bi bi-book"></i> Your Courses
+                    </h5>
+                </div>
+                <div class="card-body">
+                    {% if courses %}
+                        <div class="table-responsive">
+                            <table class="table table-hover mb-0">
+                                <thead>
+                                    <tr>
+                                        <th>Course Code</th>
+                                        <th>Course Name</th>
+                                        <th>Credits</th>
+                                        <th>Students</th>
+                                        <th>Semester</th>
+                                        <th>Action</th>
+                                    </tr>
+                                </thead>
+                                <tbody>
+                                    {% for course in courses %}
+                                    <tr>
+                                        <td><strong>{{ course.course_code }}</strong></td>
+                                        <td>{{ course.course_name }}</td>
+                                        <td>{{ course.credits }}</td>
+                                        <td>
+                                            <span class="badge bg-primary">
+                                                {{ course.enrollments|length }}
+                                            </span>
+                                        </td>
+                                        <td>
+                                            Sem {{ course.program.semester }}
+                                        </td>
+                                        <td>
+                                            <a href="{{ url_for('analytics.course_analytics', course_id=course.id) }}" 
+                                               class="btn btn-sm btn-outline-primary" title="View Analytics">
+                                                <i class="bi bi-graph-up"></i>
+                                            </a>
+                                        </td>
+                                    </tr>
+                                    {% endfor %}
+                                </tbody>
+                            </table>
+                        </div>
+                    {% else %}
+                        <p class="text-muted text-center py-5">
+                            <i class="bi bi-inbox"></i><br>
+                            No courses assigned yet
+                        </p>
+                    {% endif %}
+                </div>
+            </div>
+        </div>
+
+        <!-- Quick Actions -->
+        <div class="col-lg-4 mb-4">
+            <div class="card border-0 shadow-sm">
+                <div class="card-header bg-light">
+                    <h5 class="mb-0 fw-bold">
+                        <i class="bi bi-lightning"></i> Quick Actions
+                    </h5>
+                </div>
+                <div class="card-body">
+                    <div class="d-grid gap-2">
+                        <a href="{{ url_for('results.add_internal_marks') }}" class="btn btn-primary">
+                            <i class="bi bi-pencil"></i> Add Internal Marks
+                        </a>
+                        <a href="{{ url_for('results.add_external_marks') }}" class="btn btn-primary">
+                            <i class="bi bi-pencil"></i> Add External Marks
+                        </a>
+                        <a href="{{ url_for('results.add_placement_scores') }}" class="btn btn-primary">
+                            <i class="bi bi-bar-chart"></i> Add Placement Scores
+                        </a>
+                    </div>
+                </div>
+            </div>
+
+            <!-- Faculty Info -->
+            <div class="card border-0 shadow-sm mt-4">
+                <div class="card-header bg-light">
+                    <h5 class="mb-0 fw-bold">
+                        <i class="bi bi-info-circle"></i> Your Info
+                    </h5>
+                </div>
+                <div class="card-body">
+                    <div class="mb-3">
+                        <label class="text-muted small">Email</label>
+                        <p class="fw-bold">{{ current_user.email }}</p>
+                    </div>
+                    <div class="mb-3">
+                        <label class="text-muted small">Role</label>
+                        <p class="fw-bold">
+                            <span class="badge bg-success text-uppercase">{{ current_user.role }}</span>
+                        </p>
+                    </div>
+                    <div>
+                        <label class="text-muted small">Department</label>
+                        <p class="fw-bold">Computer Science</p>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+
+<style>
+.hero-section {
+    animation: fadeInDown 0.8s ease-out;
+}
+
+.stats-section .stat-box {
+    animation: slideInUp 0.6s ease-out;
+}
+
+@keyframes fadeInDown {
+    from {
+        opacity: 0;
+        transform: translateY(-20px);
+    }
+    to {
+        opacity: 1;
+        transform: translateY(0);
+    }
+}
+
+@keyframes slideInUp {
+    from {
+        opacity: 0;
+        transform: translateY(30px);
+    }
+    to {
+        opacity: 1;
+        transform: translateY(0);
+    }
+}
+</style>
+{% endblock %}

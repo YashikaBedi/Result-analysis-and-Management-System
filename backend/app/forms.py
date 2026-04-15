@@ -56,8 +56,8 @@ class RegistrationForm(FlaskForm):
 
 class InternalExamForm(FlaskForm):
     """Form for internal exam marks"""
-    student_id = StringField('Student ID', validators=[DataRequired()])
-    course_id = IntegerField('Course ID', validators=[DataRequired()])
+    student_id = StringField('Student Registration Number', validators=[DataRequired()])
+    course_id = SelectField('Select Course', coerce=int, validators=[DataRequired()])
 
     cie_assessment_1 = FloatField('CIE Assessment 1 (out of 10)', validators=[
         DataRequired(),
@@ -85,8 +85,8 @@ class InternalExamForm(FlaskForm):
 
 class ExternalExamForm(FlaskForm):
     """Form for external exam marks"""
-    student_id = StringField('Student ID', validators=[DataRequired()])
-    course_id = IntegerField('Course ID', validators=[DataRequired()])
+    student_id = StringField('Student Registration Number', validators=[DataRequired()])
+    course_id = SelectField('Select Course', coerce=int, validators=[DataRequired()])
     external_marks = FloatField('External Exam Marks (out of 60)', validators=[
         DataRequired(),
         NumberRange(min=0, max=60)

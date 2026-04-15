@@ -1,5 +1,11 @@
 import os
 from datetime import timedelta
+from urllib.parse import quote_plus
+from dotenv import load_dotenv
+
+# Load environment variables from .env file
+base_dir = os.path.abspath(os.path.dirname(__file__))
+load_dotenv(os.path.join(base_dir, '.env'))
 
 class Config:
     """Base configuration"""
@@ -19,9 +25,15 @@ class Config:
 class DevelopmentConfig(Config):
     """Development configuration"""
     DEBUG = True
+    # Database URI construction
+    db_user = os.getenv('DB_USER', 'root')
+    db_password = os.getenv('DB_PASSWORD', 'password')
+    db_host = os.getenv('DB_HOST', 'localhost')
+    db_name = os.getenv('DB_NAME', 'result_management')
+    
     SQLALCHEMY_DATABASE_URI = os.getenv(
         'DATABASE_URL',
-        'sqlite:///college_exam_system.db'  # SQLite for easy setup, can switch to PostgreSQL
+        f"mysql+pymysql://{db_user}:{quote_plus(db_password)}@{db_host}/{db_name}"
     )
 
 class ProductionConfig(Config):

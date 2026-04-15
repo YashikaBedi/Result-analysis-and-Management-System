@@ -2,6 +2,10 @@ from flask import Flask, redirect, url_for
 from flask_sqlalchemy import SQLAlchemy
 from flask_login import LoginManager
 import os
+import pymysql
+
+# Install pymysql as MySQLdb for compatibility
+pymysql.install_as_MySQLdb()
 
 # Initialize extensions
 db = SQLAlchemy()
@@ -9,7 +13,14 @@ login_manager = LoginManager()
 
 def create_app(config_name=None):
     """Application factory"""
-    app = Flask(__name__)
+    # Define paths for the new split structure
+    frontend_dir = os.path.abspath(os.path.join(os.path.dirname(__file__), "../../frontend"))
+    template_dir = os.path.join(frontend_dir, "templates")
+    static_dir = os.path.join(frontend_dir, "static")
+
+    app = Flask(__name__, 
+                template_folder=template_dir, 
+                static_folder=static_dir)
     
     # Load configuration
     if config_name is None:

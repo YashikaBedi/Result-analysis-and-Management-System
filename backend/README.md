@@ -44,7 +44,7 @@ A comprehensive web-based system for managing college exam results across multip
 ## Technology Stack
 
 - **Backend**: Flask 2.3.3
-- **Database**: PostgreSQL
+- **Database**: MySQL 8.0+
 - **Frontend**: HTML5, Bootstrap 5, JavaScript
 - **Data Analysis**: Pandas, NumPy
 - **Visualization**: Matplotlib, Plotly
@@ -82,7 +82,7 @@ college_exam_system/
 
 ### Prerequisites
 - Python 3.8+
-- PostgreSQL 12+
+- MySQL 8.0+
 - pip (Python package manager)
 
 ### Step 1: Clone/Download Project
@@ -107,15 +107,12 @@ pip install -r requirements.txt
 ```
 
 ### Step 4: Configure Database
-Edit `.env` file and update PostgreSQL connection string:
+Edit `.env` file and update MySQL connection string:
 ```
-DATABASE_URL=postgresql://username:password@localhost:5432/college_exam_system
+DATABASE_URL=mysql://username:password@localhost/college_exam_system
 ```
 
-Create the database:
-```bash
-createdb college_exam_system
-```
+Follow the MySQL setup in INSTALLATION_GUIDE.md
 
 ### Step 5: Initialize Database
 ```bash
@@ -243,7 +240,7 @@ Login with: Username: `admin` | Password: `admin123`
 ## Important Notes
 
 1. **Security**: Change `SECRET_KEY` in `.env` file before deployment
-2. **Database**: This system uses PostgreSQL. Ensure it's properly installed and running
+2. **Database**: This system uses MySQL. Ensure it's properly installed and running
 3. **Backups**: Regularly backup your database
 4. **Deployment**: For production, use a proper WSGI server like Gunicorn
 5. **HTTPS**: Enable HTTPS in production (set `SESSION_COOKIE_SECURE=True` in config.py)
@@ -262,7 +259,7 @@ Login with: Username: `admin` | Password: `admin123`
 ## Troubleshooting
 
 ### Database Connection Issues
-- Ensure PostgreSQL is running
+- Ensure MySQL service is running
 - Check DATABASE_URL in .env file
 - Verify database credentials
 

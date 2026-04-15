@@ -1,0 +1,243 @@
+{% extends "base.html" %}
+
+{% block title %}Career Hub - Student Dashboard{% endblock %}
+
+{% block content %}
+<div class="dashboard-modern animate-fade-in">
+    <!-- Top Header -->
+    <header class="d-flex justify-content-between align-items-center mb-5 mt-4">
+        <div>
+            <h1 class="display-6 fw-800 text-slate-900 mb-0">Career Roadmap</h1>
+            <p class="text-slate-500 mb-0">Track your skills, grades, and industry readiness.</p>
+        </div>
+        <div class="d-flex align-items-center gap-3">
+            <div class="text-end d-none d-md-block">
+                <div class="fw-700 text-slate-900 text-end">{{ current_user.full_name }}</div>
+                <div class="small text-slate-500">Reg: {{ student.registration_number }}</div>
+            </div>
+            <div class="avatar-shimmer">
+                <span>{{ current_user.full_name[0] }}</span>
+            </div>
+        </div>
+    </header>
+
+    <!-- Bento Grid Layout -->
+    <div class="bento-grid">
+        <!-- 1. Hero Progress Stats -->
+        <div class="bento-item bento-hero bg-indigo-gradient text-white">
+            <div class="bento-content">
+                <div class="row align-items-center h-100 p-4">
+                    <div class="col-md-7">
+                        <h2 class="fw-800 mb-3">Keep it up, {{ current_user.full_name.split(' ')[0] }}!</h2>
+                        <p class="opacity-75 mb-4">You have completed {{ stats.passed_courses }} modules. Your current CGPA places you in the <strong>Top 15%</strong> of your department.</p>
+                        <div class="d-flex gap-4">
+                            <div>
+                                <div class="h3 fw-800 mb-0">{{ (stats.gpa if stats else 0)|round(2) }}</div>
+                                <div class="small opacity-75">Current CGPA</div>
+                            </div>
+                            <div class="vr opacity-25"></div>
+                            <div>
+                                <div class="h3 fw-800 mb-0">{{ stats.total_courses }}</div>
+                                <div class="small opacity-75">Enrolled</div>
+                            </div>
+                        </div>
+                    </div>
+                    <div class="col-md-5 text-center mt-4 mt-md-0">
+                        <div class="progress-ring-container">
+                            <div class="progress-ring-text">
+                                <span class="percent">{{ ((stats.gpa/10)*100)|round(0)|int }}%</span>
+                                <span class="label">Overall goal</span>
+                            </div>
+                            <svg class="progress-ring" width="140" height="140">
+                                <circle class="progress-ring-circle-bg" stroke="rgba(255,255,255,0.1)" stroke-width="10" fill="transparent" r="60" cx="70" cy="70"/>
+                                <circle class="progress-ring-circle" stroke="white" stroke-width="10" stroke-linecap="round" fill="transparent" r="60" cx="70" cy="70" style="stroke-dasharray: 377; stroke-dashoffset: {{ 377 - (377 * (stats.gpa/10)) }};"/>
+                            </svg>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+
+        <!-- 2. Placement Readiness Radar -->
+        <div class="bento-item bento-chart bg-white shadow-sm border">
+            <div class="content p-4">
+                <div class="d-flex justify-content-between align-items-center mb-3">
+                    <h6 class="fw-800 text-slate-900 mb-0">Placement Web</h6>
+                    <span class="badge bg-slate-100 text-slate-600 rounded-pill">Technical</span>
+                </div>
+                <div style="height: 200px;">
+                    <canvas id="studentPlacementRadar"></canvas>
+                </div>
+            </div>
+        </div>
+
+        <!-- 3. Academic Benchmarking -->
+        <div class="bento-item bento-chart bg-white shadow-sm border">
+            <div class="content p-4">
+                <div class="d-flex justify-content-between align-items-center mb-3">
+                    <h6 class="fw-800 text-slate-900 mb-0">Grade Compass</h6>
+                    <span class="badge bg-slate-100 text-slate-600 rounded-pill">Class Vs You</span>
+                </div>
+                <div style="height: 200px;">
+                    <canvas id="studentAcademicBar"></canvas>
+                </div>
+            </div>
+        </div>
+
+        <!-- 4. Comprehensive Grades & Skills (Wide) -->
+        <div class="bento-item bento-list bg-white shadow-sm border">
+            <div class="content p-4">
+                <div class="d-flex justify-content-between align-items-center mb-4">
+                    <div>
+                        <h6 class="fw-800 text-slate-900 mb-0">Unified Assessment Record</h6>
+                        <p class="smaller text-slate-500 mb-0">Your latest marks across all examinations</p>
+                    </div>
+                    <a href="{{ url_for('results.view_results') }}" class="btn-text-link">Full Marksheet →</a>
+                </div>
+                
+                <div class="row g-4">
+                    <!-- Academic Column -->
+                    <div class="col-md-7 border-end">
+                        <div class="smaller text-uppercase fw-800 text-slate-400 mb-3 ls-1">Academic Modules</div>
+                        <div class="row g-3">
+                            {% for result in results if result.examination_type == 'internal' %}
+                            <div class="col-12">
+                                <div class="p-3 bg-slate-50 rounded-4 d-flex justify-content-between align-items-center">
+                                    <div>
+                                        <div class="fw-800 text-slate-900 small">{{ result.course.course_code }} - {{ result.course.course_name }}</div>
+                                        <div class="smaller text-slate-500">Internal: {{ result.internal_total }} | External: {{ result.external_marks }}</div>
+                                    </div>
+                                    <div class="text-end">
+                                        <div class="h5 fw-800 text-indigo mb-0">{{ result.academic_total }}</div>
+                                        <span class="badge bg-white shadow-sm smaller text-indigo">Grade {{ result.grade }}</span>
+                                    </div>
+                                </div>
+                            </div>
+                            {% endfor %}
+                            {% if not results|selectattr('examination_type', 'equalto', 'internal')|list %}
+                                <div class="col-12 text-center py-4 text-muted small italic">No academic marks recorded yet.</div>
+                            {% endif %}
+                        </div>
+                    </div>
+
+                    <!-- Placement Column -->
+                    <div class="col-md-5">
+                        <div class="smaller text-uppercase fw-800 text-slate-400 mb-3 ls-1">Certification & Placement Prep</div>
+                        <div class="d-flex flex-column gap-3">
+                            {% set pr = results|selectattr('examination_type', 'equalto', 'placement')|first %}
+                            {% if pr %}
+                                <div class="d-flex justify-content-between py-2 border-bottom border-dashed">
+                                    <span class="small text-slate-600">DSA & Logic</span>
+                                    <span class="fw-800 text-slate-900">{{ pr.dsa_mock_exam }}%</span>
+                                </div>
+                                <div class="d-flex justify-content-between py-2 border-bottom border-dashed">
+                                    <span class="small text-slate-600">Aptitude</span>
+                                    <span class="fw-800 text-slate-900">{{ pr.aptitude_score }}%</span>
+                                </div>
+                                <div class="d-flex justify-content-between py-2 border-bottom border-dashed">
+                                    <span class="small text-slate-600">Mock Interview</span>
+                                    <span class="fw-800 text-slate-900">{{ pr.interview_score }}%</span>
+                                </div>
+                                <div class="mt-2 p-3 bg-indigo-50 rounded-4 text-center">
+                                    <div class="smaller text-indigo fw-800">Placement Avg</div>
+                                    <div class="h4 fw-800 text-indigo mb-0">{{ pr.placement_average }}%</div>
+                                </div>
+                            {% else %}
+                                <div class="text-center py-4 text-muted small italic">Placement sessions pending.</div>
+                            {% endif %}
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+
+        <!-- 5. Status Snippet -->
+        <div class="bento-item bento-mini bg-slate-100 border">
+            <div class="content p-4 text-center d-flex flex-column justify-content-center h-100">
+                <div class="smaller text-slate-500 text-uppercase fw-800 mb-2">Readiness</div>
+                <div class="h3 fw-800 text-slate-900 mb-0">{{ student_data.p.interview }}%</div>
+                <div class="text-success smaller fw-700">Interview Safe</div>
+            </div>
+        </div>
+    </div>
+</div>
+
+<style>
+.dashboard-modern { padding-bottom: 50px; }
+.bento-grid {
+    display: grid;
+    grid-template-columns: repeat(4, 1fr);
+    gap: 20px;
+}
+.bento-item { border-radius: 24px; overflow: hidden; position: relative; }
+.bento-hero { grid-column: span 2; }
+.bento-chart { grid-column: span 1; }
+.bento-list { grid-column: span 3; }
+.bento-mini { grid-column: span 1; }
+
+@media (max-width: 992px) {
+    .bento-grid { grid-template-columns: repeat(2, 1fr); }
+    .bento-hero, .bento-list { grid-column: span 2; }
+}
+@media (max-width: 576px) {
+    .bento-grid { grid-template-columns: 1fr; }
+    .bento-hero, .bento-chart, .bento-list, .bento-mini { grid-column: span 1; }
+}
+
+.bg-indigo-gradient { background: linear-gradient(135deg, #4f46e5 0%, #7c3aed 100%); }
+.avatar-shimmer {
+    width: 48px; height: 48px;
+    background: #e2e8f0; border-radius: 14px;
+    display: flex; align-items: center; justify-content: center;
+    font-weight: 800; color: #475569;
+}
+.progress-ring-container { position: relative; width: 140px; height: 140px; margin: 0 auto; }
+.progress-ring-text { position: absolute; transform: translate(-50%, -50%); top: 50%; left: 50%; text-align: center; }
+.progress-ring-text .percent { display: block; font-size: 1.5rem; font-weight: 800; }
+.progress-ring-text .label { font-size: 0.65rem; opacity: 0.8; }
+
+.btn-text-link { color: #4f46e5; text-decoration: none; font-weight: 700; font-size: 0.8rem; }
+.line-clamp-1 { display: -webkit-box; -webkit-line-clamp: 1; -webkit-box-orient: vertical; overflow: hidden; }
+.fw-800 { font-weight: 800; }
+.smaller { font-size: 0.7rem; }
+</style>
+{% endblock %}
+
+{% block extra_js %}
+<script>
+document.addEventListener('DOMContentLoaded', function() {
+    // 1. Placement Radar
+    new Chart(document.getElementById('studentPlacementRadar'), {
+        type: 'radar',
+        data: {
+            labels: ['Tech', 'Apt', 'Int'],
+            datasets: [{
+                data: [{{ student_data.p.dsa }}, {{ student_data.p.aptitude }}, {{ student_data.p.interview }}],
+                backgroundColor: 'rgba(79, 70, 229, 0.2)', borderColor: '#4f46e5', borderWidth: 2
+            }]
+        },
+        options: {
+            scales: { r: { suggestedMin: 0, suggestedMax: 100, ticks: { display: false } } },
+            plugins: { legend: { display: false } }, maintainAspectRatio: false
+        }
+    });
+
+    // 2. Academic Bar
+    new Chart(document.getElementById('studentAcademicBar'), {
+        type: 'bar',
+        data: {
+            labels: ['Int', 'Ext'],
+            datasets: [
+                { label: 'Avg', data: [{{ class_internal }}, {{ class_external }}], backgroundColor: '#e2e8f0', borderRadius: 8 },
+                { label: 'You', data: [{{ student_data.internal }}, {{ student_data.external }}], backgroundColor: '#4f46e5', borderRadius: 8 }
+            ]
+        },
+        options: {
+            plugins: { legend: { display: false } },
+            maintainAspectRatio: false,
+            scales: { y: { suggestedMax: 100 } }
+        }
+    });
+});
+</script>
+{% endblock %}

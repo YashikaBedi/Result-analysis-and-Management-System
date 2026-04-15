@@ -1,0 +1,222 @@
+{% extends "base.html" %}
+
+{% block title %}Add Marks - JIMS SEC-5{% endblock %}
+
+{% block content %}
+<div class="container-fluid py-4 animate-up">
+    <div class="row justify-content-center">
+        <div class="col-xl-11">
+            <div class="header-section mb-5">
+                <div class="d-flex align-items-center gap-3">
+                    <a href="{{ url_for('dashboard.home') }}" class="btn btn-light rounded-circle p-2 shadow-sm">
+                        <i class="bi bi-arrow-left fs-5"></i>
+                    </a>
+                    <div>
+                        <h2 class="fw-800 mb-0">System Bulk Upload</h2>
+                        <p class="text-muted mb-0 small">Consolidated mark entry interface for internal, external, and placement assessment.</p>
+                    </div>
+                </div>
+            </div>
+
+            <div class="row g-4 mb-5">
+                <!-- Internal Marks Card -->
+                <div class="col-lg-4">
+                    <div class="card h-100 border-0 shadow-premium overflow-hidden">
+                        <div class="card-header bg-primary text-white py-3 border-0">
+                            <h6 class="mb-0 fw-bold"><i class="bi bi-cpu shadow-sm me-2"></i> INTERNAL ASSESSMENT</h6>
+                        </div>
+                        <div class="card-body p-4">
+                            <p class="text-muted small mb-4 lh-sm">Provide CIE-1, CIE-2, CIE-3, Mid-Term, and Assignment scores via CSV format.</p>
+                            
+                            <form action="{{ url_for('results.add_marks') }}" method="POST" enctype="multipart/form-data">
+                                <input type="hidden" name="upload_type" value="internal">
+                                
+                                <div class="mb-3">
+                                    <label class="form-label text-uppercase small text-muted">Select Course</label>
+                                    <select name="course_id" class="form-select shadow-sm" required>
+                                        <option value="">-- Choose Course --</option>
+                                        {% for course in courses %}
+                                            <option value="{{ course.id }}">{{ course.course_code }} | {{ course.course_name }}</option>
+                                        {% endfor %}
+                                    </select>
+                                </div>
+
+                                <div class="mb-4">
+                                    <label class="form-label text-uppercase small text-muted">CSV Document</label>
+                                    <input type="file" name="file" class="form-control mb-2" accept=".csv" required>
+                                    <a href="#" class="text-decoration-none small fw-bold text-primary" data-bs-toggle="modal" data-bs-target="#internalFormatModal">
+                                        <i class="bi bi-question-circle"></i> View Format
+                                    </a>
+                                </div>
+
+                                <button type="submit" class="btn btn-primary w-100 shadow-sm py-3">
+                                    <i class="bi bi-upload me-2"></i> Sync Internals
+                                </button>
+                            </form>
+                        </div>
+                    </div>
+                </div>
+
+                <!-- External Marks Card -->
+                <div class="col-lg-4">
+                    <div class="card h-100 border-0 shadow-premium">
+                        <div class="card-header bg-slate-900 text-white py-3 border-0">
+                            <h6 class="mb-0 fw-bold"><i class="bi bi-globe shadow-sm me-2"></i> EXTERNAL ASSESSMENT</h6>
+                        </div>
+                        <div class="card-body p-4">
+                            <p class="text-muted small mb-4 lh-sm">Upload final university exam results. Requires internals to be processed first.</p>
+                            
+                            <form action="{{ url_for('results.add_marks') }}" method="POST" enctype="multipart/form-data">
+                                <input type="hidden" name="upload_type" value="external">
+                                
+                                <div class="mb-3">
+                                    <label class="form-label text-uppercase small text-muted">Select Course</label>
+                                    <select name="course_id" class="form-select shadow-sm" required>
+                                        <option value="">-- Choose Course --</option>
+                                        {% for course in courses %}
+                                            <option value="{{ course.id }}">{{ course.course_code }} | {{ course.course_name }}</option>
+                                        {% endfor %}
+                                    </select>
+                                </div>
+
+                                <div class="mb-4">
+                                    <label class="form-label text-uppercase small text-muted">CSV Document</label>
+                                    <input type="file" name="file" class="form-control mb-2" accept=".csv" required>
+                                    <a href="#" class="text-decoration-none small fw-bold text-slate-900" data-bs-toggle="modal" data-bs-target="#externalFormatModal">
+                                        <i class="bi bi-question-circle"></i> View Format
+                                    </a>
+                                </div>
+
+                                <button type="submit" class="btn btn-dark w-100 shadow-sm py-3">
+                                    <i class="bi bi-upload me-2"></i> Finalize Externals
+                                </button>
+                            </form>
+                        </div>
+                    </div>
+                </div>
+
+                <!-- Placement Scores Card -->
+                <div class="col-lg-4">
+                    <div class="card h-100 border-0 shadow-premium">
+                        <div class="card-header bg-success text-white py-3 border-0">
+                            <h6 class="mb-0 fw-bold"><i class="bi bi-rocket-takeoff shadow-sm me-2"></i> PLACEMENT SCORES</h6>
+                        </div>
+                        <div class="card-body p-4">
+                            <p class="text-muted small mb-4 lh-sm">Sync mock test, technical rounds, and interview prep performance data.</p>
+                            
+                            <form action="{{ url_for('results.add_marks') }}" method="POST" enctype="multipart/form-data">
+                                <input type="hidden" name="upload_type" value="placement">
+                                <input type="hidden" name="course_id" value="0">
+                                
+                                <div class="mb-3">
+                                    <label class="form-label text-uppercase small text-muted">Processing Context</label>
+                                    <select class="form-select shadow-sm bg-light" disabled>
+                                        <option>Global Student Context</option>
+                                    </select>
+                                </div>
+
+                                <div class="mb-4">
+                                    <label class="form-label text-uppercase small text-muted">CSV Document</label>
+                                    <input type="file" name="file" class="form-control mb-2" accept=".csv" required>
+                                    <a href="#" class="text-decoration-none small fw-bold text-success" data-bs-toggle="modal" data-bs-target="#placementFormatModal">
+                                        <i class="bi bi-question-circle"></i> View Format
+                                    </a>
+                                </div>
+
+                                <button type="submit" class="btn btn-success w-100 shadow-sm py-3">
+                                    <i class="bi bi-fire me-2"></i> Update Career Performance
+                                </button>
+                            </form>
+                        </div>
+                    </div>
+                </div>
+            </div>
+
+            <!-- Manual Transition -->
+            <div class="text-center bg-white p-4 rounded-4 shadow-sm animate-up" style="animation-delay: 0.4s">
+                <p class="slate-500 mb-3 fw-semibold">Need to enter individual student data manually?</p>
+                <div class="d-flex justify-content-center gap-3">
+                    <a href="{{ url_for('results.add_internal_marks') }}" class="btn btn-outline-primary px-4">Manual Internal</a>
+                    <a href="{{ url_for('results.add_external_marks') }}" class="btn btn-outline-dark px-4">Manual External</a>
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+
+            <!-- Manual Entry Option -->
+            <div class="mt-5 pt-4 border-top text-center">
+                <p class="text-muted">Prefer manual entry?</p>
+                <div class="d-flex justify-content-center gap-3">
+                    <a href="{{ url_for('results.add_internal_marks') }}" class="btn btn-outline-primary btn-sm">Internal Form</a>
+                    <a href="{{ url_for('results.add_external_marks') }}" class="btn btn-outline-dark btn-sm">External Form</a>
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+
+<!-- Format Modals -->
+<div class="modal fade" id="internalFormatModal" tabindex="-1">
+    <div class="modal-dialog">
+        <div class="modal-content">
+            <div class="modal-header">
+                <h5 class="modal-title">Internal CSV Format</h5>
+                <button type="button" class="btn-close" data-bs-dismiss="modal"></button>
+            </div>
+            <div class="modal-body">
+                <p>Your CSV should have the following headers exactly:</p>
+                <code class="d-block p-3 bg-light rounded mb-3">
+                    registration_number, cie1, cie2, cie3, mid_term, assignment, remarks
+                </code>
+                <ul>
+                    <li><strong>cie1, cie2, cie3</strong>: Out of 10</li>
+                    <li><strong>mid_term</strong>: Out of 20</li>
+                    <li><strong>assignment</strong>: Out of 10</li>
+                </ul>
+            </div>
+        </div>
+    </div>
+</div>
+
+<div class="modal fade" id="externalFormatModal" tabindex="-1">
+    <div class="modal-dialog">
+        <div class="modal-content">
+            <div class="modal-header">
+                <h5 class="modal-title">External CSV Format</h5>
+                <button type="button" class="btn-close" data-bs-dismiss="modal"></button>
+            </div>
+            <div class="modal-body">
+                <p>Your CSV should have the following headers exactly:</p>
+                <code class="d-block p-3 bg-light rounded mb-3">
+                    registration_number, external_marks, remarks
+                </code>
+                <ul>
+                    <li><strong>external_marks</strong>: Out of 60</li>
+                </ul>
+            </div>
+        </div>
+    </div>
+</div>
+<div class="modal fade" id="placementFormatModal" tabindex="-1">
+    <div class="modal-dialog">
+        <div class="modal-content">
+            <div class="modal-header bg-success text-white">
+                <h5 class="modal-title">Placement CSV Format</h5>
+                <button type="button" class="btn-close btn-close-white" data-bs-dismiss="modal"></button>
+            </div>
+            <div class="modal-body">
+                <p>Your CSV should have the following headers exactly (all scores out of 100):</p>
+                <code class="d-block p-3 bg-light rounded mb-3 text-break">
+                    registration_number, dsa, oops, dbms, programming, aptitude, interview, remarks
+                </code>
+                <ul class="small">
+                    <li><strong>dsa, oops, dbms, programming</strong>: Mock exam scores</li>
+                    <li><strong>aptitude</strong>: Aptitude test score</li>
+                    <li><strong>interview</strong>: Mock interview score</li>
+                </ul>
+            </div>
+        </div>
+    </div>
+</div>
+{% endblock %}

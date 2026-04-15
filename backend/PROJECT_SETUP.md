@@ -19,7 +19,7 @@ Your complete college exam result management system has been created at:
 - ✅ Utility functions for analytics (`app/utils.py`)
 - ✅ Configuration management (`config.py`)
 
-### 2. **Database** (PostgreSQL)
+### 2. **Database** (MySQL)
 - ✅ 10 core tables with proper relationships
 - ✅ User table with role-based access
 - ✅ Student profiles with departments
@@ -83,7 +83,7 @@ college_exam_system/
 
 ### Prerequisites
 - Python 3.8+
-- PostgreSQL 12+
+- MySQL 8.0+
 
 ### Setup Steps
 
@@ -100,8 +100,8 @@ pip install -r requirements.txt
 ```
 
 #### 3. Configure Database
-- Edit `.env` file with your PostgreSQL credentials
-- Create database and user in PostgreSQL
+- Edit `.env` file with your MySQL credentials
+- Create database and user in MySQL
 
 #### 4. Initialize Database
 ```bash
@@ -247,7 +247,7 @@ python run.py
 | Component | Technology | Version |
 |-----------|-----------|---------|
 | Web Framework | Flask | 2.3.3 |
-| Database | PostgreSQL | 12+ |
+| Database | MySQL | 8.0+ |
 | ORM | SQLAlchemy | Included |
 | Frontend | Bootstrap | 5.3.0 |
 | Data Analysis | Pandas | 2.1.1 |
@@ -261,7 +261,7 @@ python run.py
 
 ### Immediate (Before First Use)
 1. [ ] Install all dependencies from requirements.txt
-2. [ ] Configure PostgreSQL database
+2. [ ] Configure MySQL database
 3. [ ] Update `.env` file with credentials
 4. [ ] Run `python run.py` to test
 5. [ ] Create admin user
@@ -294,7 +294,7 @@ python run.py
 
 - **Flask Docs**: https://flask.palletsprojects.com/
 - **SQLAlchemy**: https://docs.sqlalchemy.org/
-- **PostgreSQL**: https://www.postgresql.org/docs/
+- **MySQL**: https://dev.mysql.com/doc/
 - **Bootstrap**: https://getbootstrap.com/docs/5.0/
 
 ---
@@ -354,7 +354,7 @@ When entering results, remember:
 
 If you encounter any issues:
 
-1. **Database Connection**: Check PostgreSQL is running and credentials are correct
+1. **Database Connection**: Check MySQL is running and credentials are correct
 2. **Missing Packages**: Run `pip install -r requirements.txt` again
 3. **Template Issues**: Verify all files in `app/templates/` exist
 4. **Port Already In Use**: Run on different port with `python run.py --port 5001`

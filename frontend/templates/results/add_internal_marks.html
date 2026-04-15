@@ -37,7 +37,7 @@
                         </div>
                         
                         <div class="mb-3">
-                            <label class="form-label" for="course_id">Course ID</label>
+                            <label class="form-label" for="course_id">Select Course</label>
                             {{ form.course_id(class="form-control" + (" is-invalid" if form.course_id.errors else "")) }}
                             {% if form.course_id.errors %}
                                 <div class="invalid-feedback d-block">

@@ -12,9 +12,9 @@ Before you begin, ensure you have the following installed:
    - Download from: https://www.python.org/downloads/
    - Verify: `python --version`
 
-2. **PostgreSQL 12 or higher**
-   - Download from: https://www.postgresql.org/download/
-   - Verify: `psql --version`
+2. **MySQL 8.0 or higher**
+   - Download from: https://dev.mysql.com/downloads/installer/
+   - Verify: `mysql --version`
 
 3. **Git** (optional, for cloning repository)
    - Download from: https://git-scm.com/
@@ -57,41 +57,39 @@ pip install -r requirements.txt
 This will install:
 - Flask and extensions
 - SQLAlchemy (ORM)
-- PostgreSQL driver
+- MySQL driver (pymysql)
 - Science libraries (Pandas, NumPy)
 - Visualization tools (Matplotlib, Plotly)
 - PDF generation (ReportLab)
 
 ### 4. Configure Database
 
-#### Step 4.1: Create Database User and Database
-
-**On Windows (psql client):**
-```sql
--- Open psql
-psql -U postgres
-
--- Create database user
-CREATE USER college_user WITH PASSWORD 'college_password';
-
--- Create database
-CREATE DATABASE college_exam_system OWNER college_user;
-
--- Grant privileges
-ALTER ROLE college_user SET client_encoding TO 'utf8';
-ALTER ROLE college_user SET default_transaction_isolation TO 'read committed';
-ALTER ROLE college_user SET default_transaction_deferrable TO on;
-GRANT ALL PRIVILEGES ON DATABASE college_exam_system TO college_user;
-
--- Exit
-\q
-```
+#### Step 4.1: Create Database and User
+ 
+ **Using MySQL Shell or Client:**
+ ```sql
+ -- Log in as root
+ mysql -u root -p
+ 
+ -- Create database
+ CREATE DATABASE college_exam_system;
+ 
+ -- Create user
+ CREATE USER 'college_user'@'localhost' IDENTIFIED BY 'college_password';
+ 
+ -- Grant privileges
+ GRANT ALL PRIVILEGES ON college_exam_system.* TO 'college_user'@'localhost';
+ FLUSH PRIVILEGES;
+ 
+ -- Exit
+ EXIT;
+ ```
 
 #### Step 4.2: Update Environment Variables
 
 Edit `.env` file and update:
 ```
-DATABASE_URL=postgresql://college_user:college_password@localhost:5432/college_exam_system
+DATABASE_URL=mysql://college_user:college_password@localhost/college_exam_system
 SECRET_KEY=your-unique-secret-key-here
 ```
 
@@ -176,12 +174,12 @@ As Admin:
 
 ## Troubleshooting
 
-### Issue: PostgreSQL Connection Error
+### Issue: MySQL Connection Error
 
 **Solution:**
-1. Verify PostgreSQL is running:
+1. Verify MySQL service is running:
    ```bash
-   psql -U postgres
+   mysqladmin -u root -p status
    ```
 2. Check DATABASE_URL in `.env` file
 3. Ensure credentials are correct
@@ -272,7 +270,7 @@ docker run -p 8000:8000 college-exam-system
 
 - **Flask Documentation**: https://flask.palletsprojects.com/
 - **SQLAlchemy Documentation**: https://docs.sqlalchemy.org/
-- **PostgreSQL Documentation**: https://www.postgresql.org/docs/
+- **MySQL Documentation**: https://dev.mysql.com/doc/
 - **Bootstrap Documentation**: https://getbootstrap.com/docs/
 
 ## Next Steps

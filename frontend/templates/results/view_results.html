@@ -53,36 +53,48 @@
                     <tr>
                         <th>Student ID</th>
                         <th>Student Name</th>
-                        <th>Course</th>
-                        <th>Exam Type</th>
-                        <th>Internal</th>
-                        <th>External</th>
-                        <th>Total</th>
-                        <th>Grade</th>
+                        {% if exam_type == 'placement' %}
+                            <th>DSA Mock</th>
+                            <th>Aptitude</th>
+                            <th>Interview</th>
+                            <th>Overall Avg</th>
+                        {% else %}
+                            <th>Course</th>
+                            <th>Type</th>
+                            <th>Internal</th>
+                            <th>External</th>
+                            <th>Total</th>
+                            <th>Grade</th>
+                        {% endif %}
                         <th>Status</th>
                     </tr>
                 </thead>
                 <tbody>
                     {% if results.items %}
                         {% for result in results.items %}
-                        <tr>
+                        <tr class="align-middle">
                             <td>{{ result.student.registration_number if result.student else 'N/A' }}</td>
                             <td>{{ result.student.user.full_name if result.student else 'N/A' }}</td>
-                            <td>{{ result.course.course_code if result.course else 'N/A' }}</td>
+                            
+                            {% if result.examination_type == 'placement' %}
+                                <td class="fw-bold">{{ result.dsa_mock_exam }}</td>
+                                <td class="fw-bold">{{ result.aptitude_score }}</td>
+                                <td class="fw-bold">{{ result.interview_score }}</td>
+                                <td><span class="badge bg-primary">{{ result.placement_average }}%</span></td>
+                            {% else %}
+                                <td>{{ result.course.course_code if result.course else 'N/A' }}</td>
+                                <td><span class="badge bg-indigo-100 text-indigo">{{ result.examination_type.upper() }}</span></td>
+                                <td>{{ result.internal_total }}</td>
+                                <td>{{ result.external_marks }}</td>
+                                <td><strong>{{ result.academic_total }}</strong></td>
+                                <td><span class="badge bg-secondary">{{ result.grade }}</span></td>
+                            {% endif %}
+                            
                             <td>
-                                <span class="badge bg-info">{{ result.examination_type.upper() }}</span>
-                            </td>
-                            <td>{{ result.internal_total }}</td>
-                            <td>{{ result.external_marks }}</td>
-                            <td><strong>{{ result.academic_total }}</strong></td>
-                            <td>
-                                <span class="badge bg-secondary">{{ result.grade }}</span>
-                            </td>
-                            <td>
-                                {% if result.pass_fail == 'Pass' %}
+                                {% if result.pass_fail == 'Pass' or (result.examination_type == 'placement' and result.placement_average >= 60) %}
                                     <span class="badge bg-success">PASS</span>
                                 {% else %}
-                                    <span class="badge bg-danger">FAIL</span>
+                                    <span class="badge bg-danger">FAIL / LOW</span>
                                 {% endif %}
                             </td>
                         </tr>
@@ -110,7 +122,7 @@
                 </li>
             {% endif %}
             
-            {% for page_num in results.iter_pages(left_edge=1, right_edge=1, left_margin=1, right_margin=1) %}
+            {% for page_num in results.iter_pages(left_edge=1, right_edge=1, left_current=2, right_current=2) %}
                 {% if page_num %}
                     {% if page_num == results.page %}
                         <li class="page-item active">

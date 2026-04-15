@@ -1,0 +1,394 @@
+{% extends "base.html" %}
+
+{% block title %}Faculty Dashboard - JIMS SEC-5{% endblock %}
+
+{% block content %}
+<!-- Hero Section -->
+<div class="hero-section">
+    <div class="container">
+        <div class="hero-content">
+            <h1>Faculty Dashboard</h1>
+            <p>Manage courses and student evaluations</p>
+            <p class="hero-tagline">Welcome, {{ current_user.full_name }}</p>
+        </div>
+    </div>
+</div>
+
+<!-- Statistics Section -->
+<div class="container-fluid stats-section animate-up">
+    <div class="row g-4">
+        <div class="col-md-3">
+            <div class="stat-box">
+                <div class="stat-number">{{ courses|length }}</div>
+                <div class="stat-label">Courses</div>
+            </div>
+        </div>
+        <div class="col-md-3">
+            <div class="stat-box">
+                <div class="stat-number">{{ students_count }}</div>
+                <div class="stat-label">Students</div>
+            </div>
+        </div>
+        <div class="col-md-3">
+            <div class="stat-box">
+                <div class="stat-number">98%</div>
+                <div class="stat-label">Success</div>
+            </div>
+        </div>
+        <div class="col-md-3">
+            <div class="stat-box">
+                <div class="stat-number">4.8</div>
+                <div class="stat-label">Rating</div>
+            </div>
+        </div>
+    </div>
+</div>
+
+<!-- Main Dashboard Content -->
+<div class="container-fluid mt-5 mb-5 animate-up" style="animation-delay: 0.2s">
+    <div class="row">
+        <!-- Analysis Hub -->
+        <div class="col-lg-12 mb-4">
+            <div class="card border-0 shadow-premium bg-white overflow-hidden">
+                <div class="card-header bg-white py-4 px-4 d-flex justify-content-between align-items-center">
+                    <div>
+                        <h4 class="fw-800 mb-0">Analysis Hub</h4>
+                        <p class="text-muted small mb-0">
+                            {% if selected_student %}
+                                <span class="badge bg-indigo-100 text-indigo py-1 px-3">
+                                    <i class="bi bi-person-check-fill"></i> Analyzing: {{ selected_student.user.full_name }}
+                                </span>
+                            {% else %}
+                                Class-wide Performance Benchmarking
+                            {% endif %}
+                        </p>
+                    </div>
+                    <div class="d-flex gap-2">
+                        <form action="{{ url_for('dashboard.home') }}" method="GET" class="d-flex gap-2">
+                            <select name="student_id" class="form-select form-select-sm shadow-sm" style="min-width: 200px;" onchange="this.form.submit()">
+                                <option value="">-- All Students (Class View) --</option>
+                                {% for s in all_students %}
+                                    <option value="{{ s.id }}" {{ 'selected' if selected_student and selected_student.id == s.id }}>
+                                        {{ s.registration_number }} - {{ s.user.full_name }}
+                                    </option>
+                                {% endfor %}
+                            </select>
+                            {% if selected_student %}
+                                <a href="{{ url_for('dashboard.home') }}" class="btn btn-sm btn-light border">Reset to Class Avg</a>
+                            {% endif %}
+                        </form>
+                    </div>
+                </div>
+                <div class="card-body p-4">
+                    <div class="row g-4">
+                        <!-- Left: Performance Metrics -->
+                        <div class="col-lg-4">
+                            <div class="p-4 rounded-4 bg-slate-50 border h-100">
+                                <h6 class="text-uppercase text-slate-500 small fw-bold mb-4">
+                                    {% if selected_student %} Quick Individual Analysis {% else %} Global Class Stats {% endif %}
+                                </h6>
+                                
+                                <div class="mb-4">
+                                    <label class="small text-muted mb-1">Internal Average</label>
+                                    <div class="d-flex align-items-center gap-3">
+                                        <h3 class="fw-800 mb-0 text-primary">
+                                            {% if selected_student %}
+                                                {{ "%.1f"|format(student_data.internal) }}
+                                            {% else %}
+                                                {{ "%.1f"|format(class_internal) }}
+                                            {% endif %}
+                                        </h3>
+                                        <div class="small">
+                                            {% if selected_student %}
+                                                {% set diff = student_data.internal - class_internal %}
+                                                <span class="{{ 'text-success' if diff >= 0 else 'text-danger' }}">
+                                                    <i class="bi {{ 'bi-arrow-up' if diff >= 0 else 'bi-arrow-down' }}"></i>
+                                                    {{ "%.1f"|format(diff|abs) }} vs Class
+                                                </span>
+                                            {% else %}
+                                                <span class="text-slate-400">Benchmark: 25.0</span>
+                                            {% endif %}
+                                        </div>
+                                    </div>
+                                    <div class="progress mt-2" style="height: 6px;">
+                                        <div class="progress-bar bg-primary" style="width: {{ ((student_data.internal if selected_student else class_internal) / 40) * 100 }}%"></div>
+                                    </div>
+                                </div>
+
+                                <div class="mb-4">
+                                    <label class="small text-muted mb-1">External Average</label>
+                                    <div class="d-flex align-items-center gap-3">
+                                        <h3 class="fw-800 mb-0 text-success">
+                                            {% if selected_student %}
+                                                {{ "%.1f"|format(student_data.external) }}
+                                            {% else %}
+                                                {{ "%.1f"|format(class_external) }}
+                                            {% endif %}
+                                        </h3>
+                                        <div class="small text-slate-400">Out of 60.0</div>
+                                    </div>
+                                    <div class="progress mt-2" style="height: 6px;">
+                                        <div class="progress-bar bg-success" style="width: {{ ((student_data.external if selected_student else class_external) / 60) * 100 }}%"></div>
+                                    </div>
+                                </div>
+
+                                <div class="mt-5 p-3 rounded-4 bg-white shadow-sm border border-primary border-opacity-10 text-center">
+                                    <div class="small text-muted mb-1">Placement Eligibility Weight</div>
+                                    <div class="h2 fw-800 text-slate-900">
+                                        {% if selected_student %}
+                                            {{ "%.0f"|format( ((student_data.internal/40) + (student_data.external/60)) * 50 ) }}%
+                                        {% else %}
+                                            {{ "%.0f"|format( ((class_internal/40) + (class_external/60)) * 50 ) }}%
+                                        {% endif %}
+                                    </div>
+                                </div>
+                            </div>
+                        </div>
+
+                        <!-- Right: Creative Charts -->
+                        <div class="col-lg-8">
+                            <div class="row g-4">
+                                <div class="col-md-6">
+                                    <div class="chart-container" style="position: relative; height:300px; width:100%">
+                                        <canvas id="performanceRadar"></canvas>
+                                    </div>
+                                    <p class="text-center small text-muted mt-2 fw-bold">Skill Matrix Analysis</p>
+                                </div>
+                                <div class="col-md-6">
+                                    <div class="chart-container" style="position: relative; height:300px; width:100%">
+                                        <canvas id="scoreComparison"></canvas>
+                                    </div>
+                                    <p class="text-center small text-muted mt-2 fw-bold">Development Path Comparison</p>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+
+        <!-- Courses Section -->
+        <div class="col-lg-8 mb-4">
+            <div class="card border-0 shadow-sm">
+                <div class="card-header">
+                    <i class="bi bi-journal-bookmark-fill text-primary"></i> 
+                    <span>Assigned Courses</span>
+                </div>
+                <div class="card-body">
+                    {% if courses %}
+                        <div class="table-responsive">
+                            <table class="table mb-0">
+                                <thead>
+                                    <tr>
+                                        <th>Code</th>
+                                        <th>Course Name</th>
+                                        <th>Students</th>
+                                        <th>Semester</th>
+                                        <th class="text-end">View</th>
+                                    </tr>
+                                </thead>
+                                <tbody>
+                                    {% for course in courses %}
+                                    <tr>
+                                        <td><span class="badge bg-light text-primary fw-bold">{{ course.course_code }}</span></td>
+                                        <td class="fw-semibold">{{ course.course_name }}</td>
+                                        <td>
+                                            <div class="d-flex align-items-center gap-2">
+                                                <i class="bi bi-people small text-muted"></i>
+                                                {{ course.enrollments|length }}
+                                            </div>
+                                        </td>
+                                        <td>Sem {{ course.program.semester }}</td>
+                                        <td class="text-end">
+                                            <a href="{{ url_for('analytics.course_analytics', course_id=course.id) }}" 
+                                               class="btn btn-sm btn-outline-primary">
+                                                <i class="bi bi-arrow-right"></i>
+                                            </a>
+                                        </td>
+                                    </tr>
+                                    {% endfor %}
+                                </tbody>
+                            </table>
+                        </div>
+                    {% else %}
+                        <div class="text-center py-5">
+                            <img src="https://img.icons8.com/bubbles/100/000000/empty-box.png" alt="Empty">
+                            <p class="text-muted mt-3">No courses assigned yet</p>
+                        </div>
+                    {% endif %}
+                </div>
+            </div>
+        </div>
+
+        <!-- Quick Actions & Info -->
+        <div class="col-lg-4 mb-4">
+            <div class="card border-0 shadow-sm mb-4">
+                <div class="card-header">
+                    <i class="bi bi-lightning-charge-fill text-warning"></i>
+                    <span>Quick Management</span>
+                </div>
+                <div class="card-body">
+                    <div class="d-grid gap-3">
+                        <a href="{{ url_for('results.add_marks') }}" class="btn btn-primary d-flex align-items-center justify-content-between">
+                            <span>Bulk Upload (CSV)</span>
+                            <i class="bi bi-chevron-right small"></i>
+                        </a>
+                        <a href="{{ url_for('results.add_placement_scores') }}" class="btn btn-outline-primary d-flex align-items-center justify-content-between">
+                            <span>Placement Scores</span>
+                            <i class="bi bi-bar-chart-fill"></i>
+                        </a>
+                    </div>
+                </div>
+            </div>
+
+            <div class="card border-0 shadow-sm">
+                <div class="card-header">
+                    <i class="bi bi-person-badge-fill text-success"></i>
+                    <span>Identification</span>
+                </div>
+                <div class="card-body">
+                    <div class="d-flex align-items-center gap-3 mb-4">
+                        <div class="avatar-circle" style="width: 50px; height: 50px; font-size: 1.2rem;">
+                            {{ current_user.full_name[0] }}
+                        </div>
+                        <div>
+                            <div class="fw-bold">{{ current_user.full_name }}</div>
+                            <div class="text-muted small">{{ current_user.email }}</div>
+                        </div>
+                    </div>
+                    <div class="p-3 bg-light rounded-3">
+                        <div class="d-flex justify-content-between small mb-2">
+                            <span class="text-muted">Role</span>
+                            <span class="badge bg-success text-uppercase">{{ current_user.role }}</span>
+                        </div>
+                        <div class="d-flex justify-content-between small">
+                            <span class="text-muted">Department</span>
+                            <span class="fw-600">Computer Science</span>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+
+<style>
+.hero-section {
+    animation: fadeInDown 0.8s ease-out;
+}
+
+.stats-section .stat-box {
+    animation: slideInUp 0.6s ease-out;
+}
+
+@keyframes fadeInDown {
+    from {
+        opacity: 0;
+        transform: translateY(-20px);
+    }
+    to {
+        opacity: 1;
+        transform: translateY(0);
+    }
+}
+
+@keyframes slideInUp {
+    from {
+        opacity: 0;
+        transform: translateY(30px);
+    }
+    to {
+        opacity: 1;
+        transform: translateY(0);
+    }
+}
+</style>
+{% endblock %}
+
+{% block extra_js %}
+<script>
+document.addEventListener('DOMContentLoaded', function() {
+    // Data from Backend
+    const classP = {{ class_p|tojson }};
+    const studentData = {{ student_data|tojson if student_data else 'null' }};
+    const classInternal = {{ class_internal }};
+    const classExternal = {{ class_external }};
+
+    // 1. Placement Radar Chart
+    const ctxRadar = document.getElementById('performanceRadar').getContext('2d');
+    new Chart(ctxRadar, {
+        type: 'radar',
+        data: {
+            labels: ['Technical (DSA)', 'Aptitude', 'Interview'],
+            datasets: [
+                {
+                    label: 'Class Average',
+                    data: [classP.dsa, classP.aptitude, classP.interview],
+                    fill: true,
+                    backgroundColor: 'rgba(79, 70, 229, 0.1)',
+                    borderColor: 'rgba(79, 70, 229, 0.5)',
+                    pointBackgroundColor: 'rgba(79, 70, 229, 1)',
+                },
+                {% if student_data %}
+                {
+                    label: '{{ selected_student.user.full_name }}',
+                    data: [studentData.p.dsa, studentData.p.aptitude, studentData.p.interview],
+                    fill: true,
+                    backgroundColor: 'rgba(16, 185, 129, 0.2)',
+                    borderColor: 'rgb(16, 185, 129)',
+                    pointBackgroundColor: 'rgb(16, 185, 129)',
+                }
+                {% endif %}
+            ]
+        },
+        options: {
+            scales: {
+                r: {
+                    angleLines: { display: false },
+                    suggestedMin: 0,
+                    suggestedMax: 100
+                }
+            },
+            plugins: {
+                legend: { position: 'bottom' }
+            }
+        }
+    });
+
+    // 2. Score Comparison Bar Chart
+    const ctxBar = document.getElementById('scoreComparison').getContext('2d');
+    new Chart(ctxBar, {
+        type: 'bar',
+        data: {
+            labels: ['Internal Assessment', 'External Exam'],
+            datasets: [
+                {
+                    label: 'Class Avg',
+                    data: [classInternal, classExternal],
+                    backgroundColor: 'rgba(148, 163, 184, 0.5)',
+                    borderRadius: 8
+                },
+                {% if student_data %}
+                {
+                    label: '{{ selected_student.registration_number }} Score',
+                    data: [studentData.internal, studentData.external],
+                    backgroundColor: 'rgba(79, 70, 229, 0.8)',
+                    borderRadius: 8
+                }
+                {% endif %}
+            ]
+        },
+        options: {
+            responsive: true,
+            maintainAspectRatio: false,
+            plugins: {
+                legend: { position: 'bottom' }
+            },
+            scales: {
+                y: { beginAtZero: true, max: 100 }
+            }
+        }
+    });
+});
+</script>
+{% endblock %}

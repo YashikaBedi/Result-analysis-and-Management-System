@@ -129,18 +129,125 @@ def home():
         student = Student.query.filter_by(user_id=current_user.id).first()
         if not student:
             return redirect(url_for('dashboard.complete_student_profile'))
-        
+            
         stats = get_student_statistics(student.id)
         results = Result.query.filter_by(student_id=student.id).all()
         
-        return render_template('dashboard/student_home.html', stats=stats, results=results, student=student)
-    
-    elif current_user.role in ['faculty', 'hod']:
-        # Faculty dashboard
-        courses = Course.query.filter_by(faculty_id=current_user.id).all()
-        students_count = Enrollment.query.join(Course).filter(Course.faculty_id == current_user.id).count()
+        # --- CLASS BENCHMARKS ---
+        # Get averages for the courses this student is enrolled in
+        enrolled_course_ids = [e.course_id for e in student.enrollments]
+        class_internal = 0
+        class_external = 0
+        class_p = {'dsa': 0, 'aptitude': 0, 'interview': 0}
+
+        if enrolled_course_ids:
+            academic_results = Result.query.filter(Result.course_id.in_(enrolled_course_ids), Result.examination_type == 'internal').all()
+            if academic_results:
+                class_internal = sum([r.internal_total for r in academic_results]) / len(academic_results)
+                ext = [r.external_marks for r in academic_results if r.external_marks > 0]
+                class_external = sum(ext) / len(ext) if ext else 0
+
+            # Placement averages for entire department (benchmark)
+            p_results = Result.query.join(Student).filter(Student.department_id == student.department_id, Result.examination_type == 'placement').all()
+            if p_results:
+                class_p['dsa'] = sum([r.dsa_mock_exam for r in p_results]) / len(p_results)
+                class_p['aptitude'] = sum([r.aptitude_score for r in p_results]) / len(p_results)
+                class_p['interview'] = sum([r.interview_score for r in p_results]) / len(p_results)
+
+        # Personal Placement Data
+        s_p = Result.query.filter_by(student_id=student.id, examination_type='placement').first()
         
-        return render_template('dashboard/faculty_home.html', courses=courses, students_count=students_count)
+        s_internal_list = [r for r in results if r.examination_type == 'internal']
+        s_external_list = [r for r in results if r.examination_type == 'internal' and r.external_marks > 0]
+        
+        student_data = {
+            'internal': sum([r.internal_total for r in s_internal_list]) / len(s_internal_list) if s_internal_list else 0,
+            'external': sum([r.external_marks for r in s_external_list]) / len(s_external_list) if s_external_list else 0,
+            'p': {
+                'dsa': s_p.dsa_mock_exam if s_p else 0,
+                'aptitude': s_p.aptitude_score if s_p else 0,
+                'interview': s_p.interview_score if s_p else 0
+            }
+        }
+
+        return render_template('dashboard/student_home.html', 
+                             stats=stats, 
+                             results=results, 
+                             student=student,
+                             student_data=student_data,
+                             class_p=class_p,
+                             class_internal=round(class_internal, 2),
+                             class_external=round(class_external, 2))
+    
+    elif current_user.role in ['faculty', 'hod', 'admin']:
+        # Faculty dashboard
+        if current_user.role == 'admin':
+            courses = Course.query.all()
+        else:
+            courses = Course.query.filter_by(faculty_id=current_user.id).all()
+            
+        course_ids = [c.id for c in courses]
+        
+        # Get all students enrolled in these courses for the selection dropdown
+        students_query = Student.query.join(Enrollment).filter(Enrollment.course_id.in_(course_ids)).distinct() if course_ids else Student.query.filter_by(id=-1)
+        all_students = students_query.order_by(Student.registration_number).all()
+        students_count = len(all_students)
+        
+        # GET params for specific student
+        selected_student_id = request.args.get('student_id', type=int)
+        selected_student = Student.query.get(selected_student_id) if selected_student_id else None
+
+        # --- CLASS ANALYTICS ---
+        class_internal = 0
+        class_external = 0
+        class_p = {'dsa': 0, 'aptitude': 0, 'interview': 0}
+        
+        if course_ids:
+            academic_results = Result.query.filter(Result.course_id.in_(course_ids), Result.examination_type == 'internal').all()
+            if academic_results:
+                class_internal = sum([r.internal_total for r in academic_results]) / len(academic_results)
+                ext = [r.external_marks for r in academic_results if r.external_marks > 0]
+                class_external = sum(ext) / len(ext) if ext else 0
+
+            # Placement Score Analysis for class
+            student_ids = [s.id for s in all_students]
+            if student_ids:
+                p_results = Result.query.filter(Result.student_id.in_(student_ids), Result.examination_type == 'placement').all()
+                if p_results:
+                    class_p['dsa'] = sum([r.dsa_mock_exam for r in p_results]) / len(p_results)
+                    class_p['aptitude'] = sum([r.aptitude_score for r in p_results]) / len(p_results)
+                    class_p['interview'] = sum([r.interview_score for r in p_results]) / len(p_results)
+
+        # --- SPECIFIC STUDENT ANALYTICS ---
+        student_data = None
+        if selected_student:
+            s_academic = Result.query.filter_by(student_id=selected_student.id, examination_type='internal').all()
+            s_p = Result.query.filter_by(student_id=selected_student.id, examination_type='placement').first()
+            
+            # Academic breakdown with safety checks
+            s_internal_count = len(s_academic)
+            s_external_list = [r.external_marks for r in s_academic if r.external_marks > 0]
+            s_external_count = len(s_external_list)
+
+            student_data = {
+                'internal': sum([r.internal_total for r in s_academic]) / s_internal_count if s_internal_count > 0 else 0,
+                'external': sum(s_external_list) / s_external_count if s_external_count > 0 else 0,
+                'p': {
+                    'dsa': s_p.dsa_mock_exam if s_p else 0,
+                    'aptitude': s_p.aptitude_score if s_p else 0,
+                    'interview': s_p.interview_score if s_p else 0
+                }
+            }
+
+        return render_template('dashboard/faculty_home.html', 
+                             courses=courses, 
+                             all_students=all_students,
+                             selected_student=selected_student,
+                             students_count=students_count,
+                             class_internal=round(class_internal, 2),
+                             class_external=round(class_external, 2),
+                             class_p=class_p,
+                             student_data=student_data)
     
     elif current_user.role == 'admin':
         # Admin dashboard
@@ -263,12 +370,131 @@ def view_results():
     return render_template('results/view_results.html', results=results, search=search, exam_type=exam_type)
 
 
+@results_bp.route('/add-marks', methods=['GET', 'POST'])
+@login_required
+@faculty_required
+def add_marks():
+    """Unified route to add marks via CSV upload"""
+    if request.method == 'POST':
+        upload_type = request.form.get('upload_type')
+        course_id = request.form.get('course_id', type=int)
+        file = request.files.get('file')
+
+        if not file or not course_id:
+            flash('Both file and course selection are required.', 'danger')
+            return redirect(url_for('results.add_marks'))
+
+        if not file.filename.endswith('.csv'):
+            flash('Please upload a valid CSV file.', 'danger')
+            return redirect(url_for('results.add_marks'))
+
+        try:
+            import pandas as pd
+            df = pd.read_csv(file)
+            count = 0
+            errors = []
+
+            for _, row in df.iterrows():
+                reg_num = str(row['registration_number']).strip()
+                student = Student.query.filter_by(registration_number=reg_num).first()
+                
+                if not student:
+                    errors.append(f"Student {reg_num} not found.")
+                    continue
+
+                if upload_type == 'internal':
+                    result = Result.query.filter_by(
+                        student_id=student.id, course_id=course_id, examination_type='internal'
+                    ).first()
+                    
+                    if not result:
+                        result = Result(student_id=student.id, course_id=course_id, examination_type='internal', recorded_by=current_user.id)
+                    
+                    result.cie_assessment_1 = float(row.get('cie1', 0))
+                    result.cie_assessment_2 = float(row.get('cie2', 0))
+                    result.cie_assessment_3 = float(row.get('cie3', 0))
+                    result.mid_term_marks = float(row.get('mid_term', 0))
+                    result.assignment_marks = float(row.get('assignment', 0))
+                    result.remarks = str(row.get('remarks', ''))
+                    result.calculate_internal_total()
+                    db.session.add(result)
+                
+                elif upload_type == 'external':
+                    result = Result.query.filter_by(
+                        student_id=student.id, course_id=course_id, examination_type='internal'
+                    ).first()
+                    
+                    if not result:
+                        errors.append(f"Internal marks missing for student {reg_num}. External marks skipped.")
+                        continue
+                    
+                    result.external_marks = float(row.get('external_marks', 0))
+                    result.remarks = str(row.get('remarks', ''))
+                    result.calculate_academic_total()
+                    result.assign_grade()
+                    db.session.add(result)
+                
+                elif upload_type == 'placement':
+                    # Placement scores are not specific to a course_id
+                    result = Result.query.filter_by(
+                        student_id=student.id, examination_type='placement', course_id=None
+                    ).first()
+                    
+                    if not result:
+                        result = Result(student_id=student.id, examination_type='placement', recorded_by=current_user.id)
+                    
+                    result.dsa_mock_exam = float(row.get('dsa', 0))
+                    result.oops_mock_exam = float(row.get('oops', 0))
+                    result.dbms_mock_exam = float(row.get('dbms', 0))
+                    result.programming_mock_exam = float(row.get('programming', 0))
+                    result.aptitude_score = float(row.get('aptitude', 0))
+                    result.interview_score = float(row.get('interview', 0))
+                    result.remarks = str(row.get('remarks', ''))
+                    result.calculate_placement_average()
+                    db.session.add(result)
+                
+                count += 1
+
+            db.session.commit()
+            
+            if errors:
+                flash(f'Processed {count} records. Following errors occurred: ' + ", ".join(errors[:3]), 'warning')
+            else:
+                flash(f'Successfully processed {count} student marks!', 'success')
+            
+            return redirect(url_for('results.view_results'))
+
+        except Exception as e:
+            db.session.rollback()
+            flash(f'Error processing CSV: {str(e)}', 'danger')
+            return redirect(url_for('results.add_marks'))
+
+    # GET request: Show the upload page
+    user_role = str(current_user.role).lower()
+    
+    if user_role == 'admin':
+        # Admins can see all courses
+        courses = Course.query.all()
+    else:
+        # Faculty see only their assigned courses
+        courses = Course.query.filter_by(faculty_id=current_user.id).all()
+    
+    return render_template('results/add_marks.html', courses=courses)
+
+
 @results_bp.route('/add-internal', methods=['GET', 'POST'])
 @login_required
 @faculty_required
 def add_internal_marks():
     """Add internal exam marks"""
     form = InternalExamForm()
+    # Populate choices from database
+    if current_user.role == 'admin':
+        courses = Course.query.all()
+    else:
+        courses = Course.query.filter_by(faculty_id=current_user.id).all()
+        
+    form.course_id.choices = [(c.id, f"{c.course_code} - {c.course_name}") for c in courses]
     
     if form.validate_on_submit():
         student = Student.query.filter_by(
@@ -335,6 +561,13 @@ def add_internal_marks():
 def add_external_marks():
     """Add external exam marks"""
     form = ExternalExamForm()
+    # Populate choices from database
+    if current_user.role == 'admin':
+        courses = Course.query.all()
+    else:
+        courses = Course.query.filter_by(faculty_id=current_user.id).all()
+        
+    form.course_id.choices = [(c.id, f"{c.course_code} - {c.course_name}") for c in courses]
     
     if form.validate_on_submit():
         student = Student.query.filter_by(

@@ -184,7 +184,7 @@ When faculty enters marks:
 |------|-------|
 | Admin Username | admin |
 | Admin Password | admin123 |
-| Database | SQLite (college_exam_system.db) |
+| Database | MySQL (result_management) |
 | Port | 5000 |
 | URL | http://localhost:5000 |
 | Debug Mode | ON (safe for local development) |
@@ -224,9 +224,8 @@ Everything working if you see:
 - Try incognito/private mode
 
 **Forgot Password?**
-- Delete database: `college_exam_system.db`
-- Run: `python setup_db.py`
-- Login again with admin/admin123
+- Use MySQL client to update password in `users` table
+- Or reset database following INSTALLATION_GUIDE.md
 
 ---
 

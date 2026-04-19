@@ -1,241 +1,316 @@
 {% extends "base.html" %}
 
-{% block title %}Career Hub - Student Dashboard{% endblock %}
+{% block title %}My Academic Profile - Result Management System{% endblock %}
 
 {% block content %}
-<div class="dashboard-modern animate-fade-in">
-    <!-- Top Header -->
-    <header class="d-flex justify-content-between align-items-center mb-5 mt-4">
-        <div>
-            <h1 class="display-6 fw-800 text-slate-900 mb-0">Career Roadmap</h1>
-            <p class="text-slate-500 mb-0">Track your skills, grades, and industry readiness.</p>
-        </div>
-        <div class="d-flex align-items-center gap-3">
-            <div class="text-end d-none d-md-block">
-                <div class="fw-700 text-slate-900 text-end">{{ current_user.full_name }}</div>
-                <div class="small text-slate-500">Reg: {{ student.registration_number }}</div>
+<div class="animate-up">
+    <!-- Student Hero Section -->
+    <div class="hero-banner" style="background: linear-gradient(135deg, #1e1b4b 0%, #4338ca 100%);">
+        <div class="row align-items-center">
+            <div class="col-lg-8">
+                <span class="badge-soft badge-soft-indigo mb-3 text-uppercase tracking-widest">Student Dashboard</span>
+                <h1 class="display-4 fw-800 tracking-tight">Academic Journey</h1>
+                <p>Welcome, {{ student.user.full_name }}. Track your semester results, sessional scores, and explore your growth in the Analysis Hub.</p>
             </div>
-            <div class="avatar-shimmer">
-                <span>{{ current_user.full_name[0] }}</span>
+            <div class="col-lg-4 text-end d-none d-lg-block">
+                <div class="glass-panel p-4 d-inline-block text-start">
+                    <div class="small opacity-75 text-white mb-1">Registration Number</div>
+                    <div class="h3 fw-800 mb-0 text-white">{{ student.registration_number }}</div>
+                </div>
             </div>
         </div>
-    </header>
+    </div>
 
-    <!-- Bento Grid Layout -->
-    <div class="bento-grid">
-        <!-- 1. Hero Progress Stats -->
-        <div class="bento-item bento-hero bg-indigo-gradient text-white">
-            <div class="bento-content">
-                <div class="row align-items-center h-100 p-4">
-                    <div class="col-md-7">
-                        <h2 class="fw-800 mb-3">Keep it up, {{ current_user.full_name.split(' ')[0] }}!</h2>
-                        <p class="opacity-75 mb-4">You have completed {{ stats.passed_courses }} modules. Your current CGPA places you in the <strong>Top 15%</strong> of your department.</p>
-                        <div class="d-flex gap-4">
-                            <div>
-                                <div class="h3 fw-800 mb-0">{{ (stats.gpa if stats else 0)|round(2) }}</div>
-                                <div class="small opacity-75">Current CGPA</div>
+    <!-- Quick Insights -->
+    <div class="row g-4 mb-5">
+        <div class="col-md-4">
+            <div class="stat-card">
+                <div class="stat-icon" style="background: var(--primary);">
+                    <i class="bi bi-graph-up"></i>
+                </div>
+                <div>
+                    <h3 class="fw-800 mb-0">{{ stats.average_marks }}%</h3>
+                    <p class="text-zinc-500 small mb-0">Aggregate Score</p>
+                </div>
+            </div>
+        </div>
+        <div class="col-md-4">
+            <div class="stat-card">
+                <div class="stat-icon" style="background: var(--success);">
+                    <i class="bi bi-check-circle"></i>
+                </div>
+                <div>
+                    <h3 class="fw-800 mb-0">{{ stats.passed_courses }} / {{ stats.total_courses }}</h3>
+                    <p class="text-zinc-500 small mb-0">Subjects Passed</p>
+                </div>
+            </div>
+        </div>
+        <div class="col-md-4">
+            <div class="stat-card border-primary border-opacity-25" style="background: rgba(99, 102, 241, 0.05);">
+                <div class="stat-icon" style="background: var(--secondary);">
+                    <i class="bi bi-award"></i>
+                </div>
+                <div>
+                    <h3 class="fw-800 mb-0">Sem {{ student.program.semester }}</h3>
+                    <p class="text-zinc-500 small mb-0">Current Semester</p>
+                </div>
+            </div>
+        </div>
+    <div class="row g-4 mb-4">
+        {% if projection %}
+        <div class="col-lg-4">
+            <div class="card border-0 shadow-sm h-100 overflow-hidden" style="border-radius: 20px;">
+                <div class="card-body p-4">
+                    <div class="d-flex align-items-center gap-3 mb-3">
+                        <div class="stat-icon bg-soft-primary">
+                            <i class="bi bi-cpu"></i>
+                        </div>
+                        <div>
+                            <h6 class="fw-800 mb-0">Smart Prediction</h6>
+                            <p class="text-zinc-500 extra-small mb-0">AI-Powered Forecasting</p>
+                        </div>
+                    </div>
+                    <div class="text-center py-2">
+                        <div class="display-5 fw-900 text-primary mb-0">{{ projection.grade }}</div>
+                        <div class="fw-700 text-zinc-800 small">Projected Final Grade</div>
+                    </div>
+                    <hr class="my-3 opacity-50">
+                    <div class="d-flex justify-content-between align-items-center mb-2">
+                        <span class="small text-zinc-500">Estimated Total:</span>
+                        <span class="fw-800 text-primary">{{ projection.score }}%</span>
+                    </div>
+                    <div class="progress mb-3" style="height: 6px; border-radius: 10px;">
+                        <div class="progress-bar" role="progressbar" style="width: {{ projection.score }}%;" aria-valuenow="{{ projection.score }}" aria-valuemin="0" aria-valuemax="100"></div>
+                    </div>
+                    <div class="p-3 rounded-4 bg-zinc-50 border border-zinc-100">
+                        <p class="extra-small text-zinc-600 mb-0"><i class="bi bi-info-circle me-1"></i> {{ projection.message }}</p>
+                    </div>
+                </div>
+            </div>
+        </div>
+        {% endif %}
+    </div>
+
+    <div class="row g-4">
+        <!-- Analysis Hub & Report Actions -->
+        <div class="col-lg-12 mb-4">
+            <div class="card border-0 shadow-lg overflow-hidden" style="border-radius: 20px; background: linear-gradient(135deg, var(--primary), var(--secondary));">
+                <div class="card-body p-5 d-flex justify-content-between align-items-center text-white">
+                    <div class="col-lg-7">
+                        <h2 class="fw-800 mb-2">Academic Performance Hub</h2>
+                        <p class="opacity-75 mb-4">Deep dive into your semester-wise growth, internal vs. external marks bifurcation, and grade trends. Benchmark your progress against the departmental standards.</p>
+                        <div class="d-flex gap-3">
+                            <a href="{{ url_for('analytics.analysis_hub') }}" class="btn btn-light fw-bold text-primary px-4">
+                                Explore Analytics <i class="bi bi-graph-up-arrow ms-2"></i>
+                            </a>
+                            <a href="{{ url_for('analytics.performance_report', student_id=student.id) }}" class="btn btn-outline-light border-2 fw-bold px-4">
+                                <i class="bi bi-file-earmark-text me-2"></i> Full Performance Report
+                            </a>
+                        </div>
+                    </div>
+                    <div class="col-lg-4 d-none d-lg-block text-end">
+                        <i class="bi bi-grid-3x3-gap-fill display-1 opacity-25"></i>
+                    </div>
+                </div>
+            </div>
+        </div>
+
+        <!-- Performance Radar -->
+        <div class="col-lg-6">
+            <div class="card h-100">
+                <div class="card-header border-0 bg-white pt-4 px-4">
+                    <h5 class="fw-800 mb-0">Performance vs Class Average</h5>
+                    <p class="text-zinc-500 small mb-0">Benchmark your progress against the department standards.</p>
+                </div>
+                <div class="card-body p-4">
+                    <div class="chart-container" style="position: relative; height:350px;">
+                        <canvas id="studentRadarChart"></canvas>
+                    </div>
+                </div>
+            </div>
+        </div>
+
+        <!-- Grade Distribution / Summary -->
+        <div class="col-lg-6">
+            <div class="card h-100">
+                <div class="card-header border-0 bg-white pt-4 px-4 d-flex justify-content-between align-items-center">
+                    <h5 class="fw-800 mb-0">Recent Subject Performance</h5>
+                    <a href="{{ url_for('results.view_results') }}" class="btn btn-sm btn-light border">View All</a>
+                </div>
+                <div class="card-body px-4 pb-4">
+                    <div class="table-responsive">
+                        <table class="table table-premium mb-0">
+                            <thead>
+                                <tr>
+                                    <th>Subject</th>
+                                    <th class="text-center">Internal</th>
+                                    <th class="text-center">External</th>
+                                    <th class="text-end">Grade</th>
+                                </tr>
+                            </thead>
+                            <tbody>
+                                {% if results %}
+                                    {% for r in results[:5] %}
+                                    <tr>
+                                        <td>
+                                            <div class="fw-600">{{ r.course.course_name }}</div>
+                                            <div class="small text-zinc-400">{{ r.course.course_code }}</div>
+                                        </td>
+                                        <td class="text-center fw-bold">{{ r.internal_total }}</td>
+                                        <td class="text-center">
+                                            {% if r.external_marks %}
+                                                {{ r.external_marks }}
+                                            {% else %}
+                                                <span class="text-zinc-300">Pending</span>
+                                            {% endif %}
+                                        </td>
+                                        <td class="text-end">
+                                            <span class="badge-soft {% if r.grade in ['A+', 'A', 'B+'] %}badge-soft-emerald{% elif r.grade == 'F' %}badge-soft-rose{% else %}badge-soft-amber{% endif %}">
+                                                {{ r.grade or '-' }}
+                                            </span>
+                                        </td>
+                                    </tr>
+                                    {% endfor %}
+                                {% else %}
+                                    <tr>
+                                        <td colspan="4" class="text-center py-5 text-zinc-400 small">No results recorded yet.</td>
+                                    </tr>
+                                {% endif %}
+                            </tbody>
+                        </table>
+                    </div>
+                </div>
+            </div>
+        </div>
+
+        <!-- Placement Readiness -->
+        <div class="col-lg-12">
+            <div class="card overflow-hidden">
+                <div class="bg-zinc-50 border-bottom py-3 px-4 d-flex justify-content-between align-items-center">
+                    <h5 class="fw-800 mb-0 text-zinc-700">Placement Assessment Readiness</h5>
+                    <div class="text-zinc-500 small d-flex align-items-center gap-2">
+                        <i class="bi bi-info-circle"></i> Based on latest Mock Exams
+                    </div>
+                </div>
+                <div class="card-body p-4">
+                    <div class="row g-4 text-center">
+                        <div class="col-md-4">
+                            <div class="p-4 rounded-4 bg-white border shadow-sm">
+                                <div class="text-zinc-500 small mb-2">Technical Skills (DSA)</div>
+                                <div class="h2 fw-800 text-primary mb-3">{{ student_data.p.dsa }}%</div>
+                                <div class="progress" style="height: 6px;">
+                                    <div class="progress-bar bg-primary" style="width: {{ student_data.p.dsa }}%"></div>
+                                </div>
+                                <div class="small text-zinc-400 mt-2">Class Avg: {{ "%.1f"|format(class_p.dsa) }}%</div>
                             </div>
-                            <div class="vr opacity-25"></div>
-                            <div>
-                                <div class="h3 fw-800 mb-0">{{ stats.total_courses }}</div>
-                                <div class="small opacity-75">Enrolled</div>
+                        </div>
+                        <div class="col-md-4">
+                            <div class="p-4 rounded-4 bg-white border shadow-sm">
+                                <div class="text-zinc-500 small mb-2">Aptitude & Logical</div>
+                                <div class="h2 fw-800 text-info mb-3">{{ student_data.p.aptitude }}%</div>
+                                <div class="progress" style="height: 6px;">
+                                    <div class="progress-bar bg-info" style="width: {{ student_data.p.aptitude }}%"></div>
+                                </div>
+                                <div class="small text-zinc-400 mt-2">Class Avg: {{ "%.1f"|format(class_p.aptitude) }}%</div>
+                            </div>
+                        </div>
+                        <div class="col-md-4">
+                            <div class="p-4 rounded-4 bg-white border shadow-sm">
+                                <div class="text-zinc-500 small mb-2">Interview & Soft Skills</div>
+                                <div class="h2 fw-800 text-success mb-3">{{ student_data.p.interview }}%</div>
+                                <div class="progress" style="height: 6px;">
+                                    <div class="progress-bar bg-success" style="width: {{ student_data.p.interview }}%"></div>
+                                </div>
+                                <div class="small text-zinc-400 mt-2">Class Avg: {{ "%.1f"|format(class_p.interview) }}%</div>
                             </div>
                         </div>
                     </div>
-                    <div class="col-md-5 text-center mt-4 mt-md-0">
-                        <div class="progress-ring-container">
-                            <div class="progress-ring-text">
-                                <span class="percent">{{ ((stats.gpa/10)*100)|round(0)|int }}%</span>
-                                <span class="label">Overall goal</span>
-                            </div>
-                            <svg class="progress-ring" width="140" height="140">
-                                <circle class="progress-ring-circle-bg" stroke="rgba(255,255,255,0.1)" stroke-width="10" fill="transparent" r="60" cx="70" cy="70"/>
-                                <circle class="progress-ring-circle" stroke="white" stroke-width="10" stroke-linecap="round" fill="transparent" r="60" cx="70" cy="70" style="stroke-dasharray: 377; stroke-dashoffset: {{ 377 - (377 * (stats.gpa/10)) }};"/>
-                            </svg>
-                        </div>
-                    </div>
                 </div>
             </div>
         </div>
-
-        <!-- 2. Placement Readiness Radar -->
-        <div class="bento-item bento-chart bg-white shadow-sm border">
-            <div class="content p-4">
-                <div class="d-flex justify-content-between align-items-center mb-3">
-                    <h6 class="fw-800 text-slate-900 mb-0">Placement Web</h6>
-                    <span class="badge bg-slate-100 text-slate-600 rounded-pill">Technical</span>
+        <!-- Academic Pulse / Timeline -->
+        <div class="col-lg-12 mb-4">
+            <div class="card border-0 shadow-sm" style="border-radius: 24px;">
+                <div class="card-header border-0 bg-white pt-4 px-4">
+                    <h5 class="fw-800 mb-0 d-flex align-items-center gap-2">
+                        <i class="bi bi-calendar3 text-primary"></i>
+                        Academic Pulse
+                    </h5>
+                    <p class="text-zinc-500 small mb-0">Upcoming institutional milestones and vital dates.</p>
                 </div>
-                <div style="height: 200px;">
-                    <canvas id="studentPlacementRadar"></canvas>
-                </div>
-            </div>
-        </div>
-
-        <!-- 3. Academic Benchmarking -->
-        <div class="bento-item bento-chart bg-white shadow-sm border">
-            <div class="content p-4">
-                <div class="d-flex justify-content-between align-items-center mb-3">
-                    <h6 class="fw-800 text-slate-900 mb-0">Grade Compass</h6>
-                    <span class="badge bg-slate-100 text-slate-600 rounded-pill">Class Vs You</span>
-                </div>
-                <div style="height: 200px;">
-                    <canvas id="studentAcademicBar"></canvas>
-                </div>
-            </div>
-        </div>
-
-        <!-- 4. Comprehensive Grades & Skills (Wide) -->
-        <div class="bento-item bento-list bg-white shadow-sm border">
-            <div class="content p-4">
-                <div class="d-flex justify-content-between align-items-center mb-4">
-                    <div>
-                        <h6 class="fw-800 text-slate-900 mb-0">Unified Assessment Record</h6>
-                        <p class="smaller text-slate-500 mb-0">Your latest marks across all examinations</p>
-                    </div>
-                    <a href="{{ url_for('results.view_results') }}" class="btn-text-link">Full Marksheet →</a>
-                </div>
-                
-                <div class="row g-4">
-                    <!-- Academic Column -->
-                    <div class="col-md-7 border-end">
-                        <div class="smaller text-uppercase fw-800 text-slate-400 mb-3 ls-1">Academic Modules</div>
-                        <div class="row g-3">
-                            {% for result in results if result.examination_type == 'internal' %}
-                            <div class="col-12">
-                                <div class="p-3 bg-slate-50 rounded-4 d-flex justify-content-between align-items-center">
-                                    <div>
-                                        <div class="fw-800 text-slate-900 small">{{ result.course.course_code }} - {{ result.course.course_name }}</div>
-                                        <div class="smaller text-slate-500">Internal: {{ result.internal_total }} | External: {{ result.external_marks }}</div>
-                                    </div>
-                                    <div class="text-end">
-                                        <div class="h5 fw-800 text-indigo mb-0">{{ result.academic_total }}</div>
-                                        <span class="badge bg-white shadow-sm smaller text-indigo">Grade {{ result.grade }}</span>
-                                    </div>
+                <div class="card-body p-4">
+                    {% if upcoming_events %}
+                        <div class="row g-4">
+                            {% for event in upcoming_events %}
+                            <div class="col-md-4 col-lg-2-4">
+                                <div class="p-3 rounded-4 bg-zinc-50 border h-100 text-center transition-all hover-translate-y">
+                                    <div class="small fw-800 text-primary text-uppercase mb-1">{{ event.start_date.strftime('%b %d') }}</div>
+                                    <div class="fw-700 text-zinc-900 small mb-1">{{ event.title }}</div>
+                                    <div class="extra-small text-zinc-500">{{ event.event_type|capitalize }}</div>
                                 </div>
                             </div>
                             {% endfor %}
-                            {% if not results|selectattr('examination_type', 'equalto', 'internal')|list %}
-                                <div class="col-12 text-center py-4 text-muted small italic">No academic marks recorded yet.</div>
-                            {% endif %}
                         </div>
-                    </div>
-
-                    <!-- Placement Column -->
-                    <div class="col-md-5">
-                        <div class="smaller text-uppercase fw-800 text-slate-400 mb-3 ls-1">Certification & Placement Prep</div>
-                        <div class="d-flex flex-column gap-3">
-                            {% set pr = results|selectattr('examination_type', 'equalto', 'placement')|first %}
-                            {% if pr %}
-                                <div class="d-flex justify-content-between py-2 border-bottom border-dashed">
-                                    <span class="small text-slate-600">DSA & Logic</span>
-                                    <span class="fw-800 text-slate-900">{{ pr.dsa_mock_exam }}%</span>
-                                </div>
-                                <div class="d-flex justify-content-between py-2 border-bottom border-dashed">
-                                    <span class="small text-slate-600">Aptitude</span>
-                                    <span class="fw-800 text-slate-900">{{ pr.aptitude_score }}%</span>
-                                </div>
-                                <div class="d-flex justify-content-between py-2 border-bottom border-dashed">
-                                    <span class="small text-slate-600">Mock Interview</span>
-                                    <span class="fw-800 text-slate-900">{{ pr.interview_score }}%</span>
-                                </div>
-                                <div class="mt-2 p-3 bg-indigo-50 rounded-4 text-center">
-                                    <div class="smaller text-indigo fw-800">Placement Avg</div>
-                                    <div class="h4 fw-800 text-indigo mb-0">{{ pr.placement_average }}%</div>
-                                </div>
-                            {% else %}
-                                <div class="text-center py-4 text-muted small italic">Placement sessions pending.</div>
-                            {% endif %}
+                    {% else %}
+                        <div class="text-center py-4">
+                            <i class="bi bi-calendar-x h2 text-zinc-200"></i>
+                            <p class="text-zinc-500 small mt-2">No upcoming academic events at this time.</p>
                         </div>
-                    </div>
+                    {% endif %}
                 </div>
-            </div>
-        </div>
-
-        <!-- 5. Status Snippet -->
-        <div class="bento-item bento-mini bg-slate-100 border">
-            <div class="content p-4 text-center d-flex flex-column justify-content-center h-100">
-                <div class="smaller text-slate-500 text-uppercase fw-800 mb-2">Readiness</div>
-                <div class="h3 fw-800 text-slate-900 mb-0">{{ student_data.p.interview }}%</div>
-                <div class="text-success smaller fw-700">Interview Safe</div>
             </div>
         </div>
     </div>
 </div>
-
-<style>
-.dashboard-modern { padding-bottom: 50px; }
-.bento-grid {
-    display: grid;
-    grid-template-columns: repeat(4, 1fr);
-    gap: 20px;
-}
-.bento-item { border-radius: 24px; overflow: hidden; position: relative; }
-.bento-hero { grid-column: span 2; }
-.bento-chart { grid-column: span 1; }
-.bento-list { grid-column: span 3; }
-.bento-mini { grid-column: span 1; }
-
-@media (max-width: 992px) {
-    .bento-grid { grid-template-columns: repeat(2, 1fr); }
-    .bento-hero, .bento-list { grid-column: span 2; }
-}
-@media (max-width: 576px) {
-    .bento-grid { grid-template-columns: 1fr; }
-    .bento-hero, .bento-chart, .bento-list, .bento-mini { grid-column: span 1; }
-}
-
-.bg-indigo-gradient { background: linear-gradient(135deg, #4f46e5 0%, #7c3aed 100%); }
-.avatar-shimmer {
-    width: 48px; height: 48px;
-    background: #e2e8f0; border-radius: 14px;
-    display: flex; align-items: center; justify-content: center;
-    font-weight: 800; color: #475569;
-}
-.progress-ring-container { position: relative; width: 140px; height: 140px; margin: 0 auto; }
-.progress-ring-text { position: absolute; transform: translate(-50%, -50%); top: 50%; left: 50%; text-align: center; }
-.progress-ring-text .percent { display: block; font-size: 1.5rem; font-weight: 800; }
-.progress-ring-text .label { font-size: 0.65rem; opacity: 0.8; }
-
-.btn-text-link { color: #4f46e5; text-decoration: none; font-weight: 700; font-size: 0.8rem; }
-.line-clamp-1 { display: -webkit-box; -webkit-line-clamp: 1; -webkit-box-orient: vertical; overflow: hidden; }
-.fw-800 { font-weight: 800; }
-.smaller { font-size: 0.7rem; }
-</style>
 {% endblock %}
 
 {% block extra_js %}
 <script>
 document.addEventListener('DOMContentLoaded', function() {
-    // 1. Placement Radar
-    new Chart(document.getElementById('studentPlacementRadar'), {
+    const classP = {{ class_p|tojson }};
+    const studentData = {{ student_data|tojson }};
+    const classInternal = {{ class_internal }};
+    const classExternal = {{ class_external }};
+
+    const ctx = document.getElementById('studentRadarChart').getContext('2d');
+    new Chart(ctx, {
         type: 'radar',
         data: {
-            labels: ['Tech', 'Apt', 'Int'],
-            datasets: [{
-                data: [{{ student_data.p.dsa }}, {{ student_data.p.aptitude }}, {{ student_data.p.interview }}],
-                backgroundColor: 'rgba(79, 70, 229, 0.2)', borderColor: '#4f46e5', borderWidth: 2
-            }]
-        },
-        options: {
-            scales: { r: { suggestedMin: 0, suggestedMax: 100, ticks: { display: false } } },
-            plugins: { legend: { display: false } }, maintainAspectRatio: false
-        }
-    });
-
-    // 2. Academic Bar
-    new Chart(document.getElementById('studentAcademicBar'), {
-        type: 'bar',
-        data: {
-            labels: ['Int', 'Ext'],
+            labels: ['Internal Assessment', 'External Exam', 'DSA Mock', 'Aptitude', 'Interview'],
             datasets: [
-                { label: 'Avg', data: [{{ class_internal }}, {{ class_external }}], backgroundColor: '#e2e8f0', borderRadius: 8 },
-                { label: 'You', data: [{{ student_data.internal }}, {{ student_data.external }}], backgroundColor: '#4f46e5', borderRadius: 8 }
+                {
+                    label: 'Class Average',
+                    data: [classInternal, classExternal, classP.dsa, classP.aptitude, classP.interview],
+                    fill: true,
+                    backgroundColor: 'rgba(99, 102, 241, 0.05)',
+                    borderColor: 'rgba(99, 102, 241, 0.3)',
+                    pointBackgroundColor: 'rgba(99, 102, 241, 0.5)',
+                    borderDash: [5, 5]
+                },
+                {
+                    label: 'My Scores',
+                    data: [studentData.internal, studentData.external, studentData.p.dsa, studentData.p.aptitude, studentData.p.interview],
+                    fill: true,
+                    backgroundColor: 'rgba(99, 102, 241, 0.15)',
+                    borderColor: '#6366f1',
+                    pointBackgroundColor: '#6366f1',
+                    borderWidth: 3
+                }
             ]
         },
         options: {
-            plugins: { legend: { display: false } },
-            maintainAspectRatio: false,
-            scales: { y: { suggestedMax: 100 } }
+            scales: {
+                r: {
+                    angleLines: { display: true, color: '#f1f5f9' },
+                    grid: { color: '#f1f5f9' },
+                    suggestedMin: 0,
+                    suggestedMax: 100,
+                    ticks: { display: false }
+                }
+            },
+            plugins: {
+                legend: { position: 'bottom', labels: { usePointStyle: true, padding: 25 } }
+            }
         }
     });
 });

@@ -1,0 +1,37 @@
+{% extends "base.html" %}
+
+{% block title %}Request Password Reset - JIMS SEC-5{% endblock %}
+
+{% block auth_content %}
+<div class="auth-card">
+    <div class="auth-header text-center mb-5">
+        <div class="logo-circle-large mb-3">
+            <i class="bi bi-shield-lock-fill"></i>
+        </div>
+        <h1 class="fw-bold mb-2">Reset Password</h1>
+        <p class="text-light opacity-75">Submit a request to Admin/HOD</p>
+    </div>
+
+    <div class="card border-0 shadow-lg" style="border-radius: 20px;">
+        <div class="card-body p-5 text-dark">
+            <p class="text-muted small mb-4">Enter your username below. Your request will be sent to the administration for approval.</p>
+            
+            <form method="POST">
+                <div class="mb-4">
+                    <label class="form-label">Username</label>
+                    <input type="text" name="username" class="form-control form-control-lg" placeholder="Enter your username" required>
+                </div>
+                
+                <div class="d-grid gap-2 mb-4">
+                    <button type="submit" class="btn btn-primary btn-lg fw-bold">Submit Request</button>
+                </div>
+                
+                <p class="text-center mb-0">
+                    Remembered your password? 
+                    <a href="{{ url_for('auth.login') }}" class="fw-bold text-decoration-none">Login here</a>
+                </p>
+            </form>
+        </div>
+    </div>
+</div>
+{% endblock %}

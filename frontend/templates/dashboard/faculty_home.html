@@ -1,72 +1,98 @@
 {% extends "base.html" %}
 
-{% block title %}Faculty Dashboard - JIMS SEC-5{% endblock %}
+{% block title %}Faculty Performance Hub - Result Management System{% endblock %}
 
 {% block content %}
-<!-- Hero Section -->
-<div class="hero-section">
-    <div class="container">
-        <div class="hero-content">
-            <h1>Faculty Dashboard</h1>
-            <p>Manage courses and student evaluations</p>
-            <p class="hero-tagline">Welcome, {{ current_user.full_name }}</p>
+<div class="animate-up">
+    <!-- Hero Banner -->
+    <div class="hero-banner" style="background: linear-gradient(135deg, #0f172a 0%, #312e81 100%);">
+        <div class="row align-items-center">
+            <div class="col-lg-8">
+                <span class="badge-soft badge-soft-emerald mb-3 text-uppercase tracking-widest">Faculty Dashboard</span>
+                <h1 class="display-4 fw-800 tracking-tight">Academic Performance Hub</h1>
+                <p>Welcome, {{ current_user.full_name }}. Monitor your assigned courses, evaluate student progress, and access the institutional Analysis Hub.</p>
+            </div>
+            <div class="col-lg-4 text-end d-none d-lg-block">
+                <div class="p-4 glass-panel d-inline-block text-start" style="min-width: 240px;">
+                    <div class="small opacity-75 text-white mb-2">My Current Rating</div>
+                    <div class="d-flex align-items-end gap-2">
+                        <div class="h1 fw-800 mb-0 text-white">4.8</div>
+                        <div class="small text-emerald-400 mb-1 fw-bold"><i class="bi bi-star-fill"></i> Top 5%</div>
+                    </div>
+                </div>
+            </div>
         </div>
     </div>
-</div>
 
-<!-- Statistics Section -->
-<div class="container-fluid stats-section animate-up">
+    <!-- Quick Stats -->
+    <div class="row g-4 mb-5">
+        <div class="col-md-3">
+            <div class="stat-card glass-panel shadow-xl" style="background: var(--glass-bg); backdrop-filter: blur(12px); border: 1px solid var(--glass-border); transform: perspective(1000px) rotateX(2deg) rotateY(-2deg);">
+                <div class="stat-icon" style="background: linear-gradient(135deg, #6366f1, #4f46e5); box-shadow: 0 8px 32px rgba(99, 102, 241, 0.3);">
+                    <i class="bi bi-journal-text"></i>
+                </div>
+                <div>
+                    <h3 class="fw-800 mb-0">{{ courses|length }}</h3>
+                    <p class="text-zinc-500 small mb-0">Assigned Courses</p>
+                </div>
+            </div>
+        </div>
+        <div class="col-md-3">
+            <div class="stat-card glass-panel shadow-xl" style="background: var(--glass-bg); backdrop-filter: blur(12px); border: 1px solid var(--glass-border); transform: perspective(1000px) rotateX(-1deg) rotateY(1deg);">
+                <div class="stat-icon" style="background: linear-gradient(135deg, #0ea5e9, #2563eb); box-shadow: 0 8px 32px rgba(14, 165, 233, 0.3);">
+                    <i class="bi bi-mortarboard"></i>
+                </div>
+                <div>
+                    <h3 class="fw-800 mb-0">{{ students_count }}</h3>
+                    <p class="text-zinc-500 small mb-0">Total Students</p>
+                </div>
+            </div>
+        </div>
+        <div class="col-md-3">
+            <div class="stat-card glass-panel shadow-xl" style="background: var(--glass-bg); backdrop-filter: blur(12px); border: 1px solid var(--glass-border); transform: perspective(1000px) rotateX(1deg) rotateY(-1deg);">
+                <div class="stat-icon" style="background: linear-gradient(135deg, #10b981, #059669); box-shadow: 0 8px 32px rgba(16, 185, 129, 0.3);">
+                    <i class="bi bi-graph-up-arrow"></i>
+                </div>
+                <div>
+                    <h3 class="fw-800 mb-0">98%</h3>
+                    <p class="text-zinc-500 small mb-0">Class Success Rate</p>
+                </div>
+            </div>
+        </div>
+        <div class="col-md-3">
+            <div class="stat-card glass-panel shadow-xl" style="background: var(--glass-bg); backdrop-filter: blur(12px); border: 1px solid var(--glass-border); transform: perspective(1000px) rotateX(-2deg) rotateY(2deg);">
+                <div class="stat-icon" style="background: linear-gradient(135deg, #ec4899, #be185d); box-shadow: 0 8px 32px rgba(236, 72, 153, 0.3);">
+                    <i class="bi bi-lightning-charge"></i>
+                </div>
+                <div>
+                    <h3 class="fw-800 mb-0">Live</h3>
+                    <p class="text-zinc-500 small mb-0">Evaluation Status</p>
+                </div>
+            </div>
+        </div>
+    </div>
+
     <div class="row g-4">
-        <div class="col-md-3">
-            <div class="stat-box">
-                <div class="stat-number">{{ courses|length }}</div>
-                <div class="stat-label">Courses</div>
-            </div>
-        </div>
-        <div class="col-md-3">
-            <div class="stat-box">
-                <div class="stat-number">{{ students_count }}</div>
-                <div class="stat-label">Students</div>
-            </div>
-        </div>
-        <div class="col-md-3">
-            <div class="stat-box">
-                <div class="stat-number">98%</div>
-                <div class="stat-label">Success</div>
-            </div>
-        </div>
-        <div class="col-md-3">
-            <div class="stat-box">
-                <div class="stat-number">4.8</div>
-                <div class="stat-label">Rating</div>
-            </div>
-        </div>
-    </div>
-</div>
-
-<!-- Main Dashboard Content -->
-<div class="container-fluid mt-5 mb-5 animate-up" style="animation-delay: 0.2s">
-    <div class="row">
-        <!-- Analysis Hub -->
+        <!-- Analysis Hub Section -->
         <div class="col-lg-12 mb-4">
-            <div class="card border-0 shadow-premium bg-white overflow-hidden">
-                <div class="card-header bg-white py-4 px-4 d-flex justify-content-between align-items-center">
+            <div class="card overflow-hidden">
+                <div class="card-header border-0 bg-white py-4 px-4 d-flex justify-content-between align-items-center">
                     <div>
-                        <h4 class="fw-800 mb-0">Analysis Hub</h4>
-                        <p class="text-muted small mb-0">
+                        <h4 class="fw-800 mb-0">Performance Insights Hub</h4>
+                        <p class="text-zinc-500 small mb-0">
                             {% if selected_student %}
-                                <span class="badge bg-indigo-100 text-indigo py-1 px-3">
-                                    <i class="bi bi-person-check-fill"></i> Analyzing: {{ selected_student.user.full_name }}
+                                <span class="badge-soft badge-soft-indigo mt-1">
+                                    <i class="bi bi-person-circle"></i> Analyzing: {{ selected_student.user.full_name }}
                                 </span>
                             {% else %}
-                                Class-wide Performance Benchmarking
+                                Aggregated Class Benchmarking
                             {% endif %}
                         </p>
                     </div>
-                    <div class="d-flex gap-2">
+                    <div class="d-flex gap-3">
                         <form action="{{ url_for('dashboard.home') }}" method="GET" class="d-flex gap-2">
-                            <select name="student_id" class="form-select form-select-sm shadow-sm" style="min-width: 200px;" onchange="this.form.submit()">
-                                <option value="">-- All Students (Class View) --</option>
+                            <select name="student_id" class="form-select form-select-sm border-zinc-200" style="min-width: 220px;" onchange="this.form.submit()">
+                                <option value="">-- 全 Class View --</option>
                                 {% for s in all_students %}
                                     <option value="{{ s.id }}" {{ 'selected' if selected_student and selected_student.id == s.id }}>
                                         {{ s.registration_number }} - {{ s.user.full_name }}
@@ -74,67 +100,62 @@
                                 {% endfor %}
                             </select>
                             {% if selected_student %}
-                                <a href="{{ url_for('dashboard.home') }}" class="btn btn-sm btn-light border">Reset to Class Avg</a>
+                                <a href="{{ url_for('dashboard.home') }}" class="btn btn-sm btn-light border">Reset</a>
                             {% endif %}
                         </form>
+                        <a href="{{ url_for('analytics.analysis_hub') }}" class="btn btn-primary px-4 fw-bold">
+                            Analysis Hub <i class="bi bi-graph-up-arrow ms-2"></i>
+                        </a>
                     </div>
                 </div>
-                <div class="card-body p-4">
+                <div class="card-body p-4 bg-zinc-50 border-top">
                     <div class="row g-4">
-                        <!-- Left: Performance Metrics -->
+                        <!-- Numeric Metrics -->
                         <div class="col-lg-4">
-                            <div class="p-4 rounded-4 bg-slate-50 border h-100">
-                                <h6 class="text-uppercase text-slate-500 small fw-bold mb-4">
-                                    {% if selected_student %} Quick Individual Analysis {% else %} Global Class Stats {% endif %}
+                            <div class="bg-white p-4 rounded-4 shadow-sm border h-100">
+                                <h6 class="text-uppercase tracking-widest text-zinc-400 small fw-bold mb-4">
+                                    {% if selected_student %}Individual metrics{% else %}Class Benchmarks{% endif %}
                                 </h6>
                                 
                                 <div class="mb-4">
-                                    <label class="small text-muted mb-1">Internal Average</label>
-                                    <div class="d-flex align-items-center gap-3">
-                                        <h3 class="fw-800 mb-0 text-primary">
+                                    <div class="d-flex justify-content-between mb-2">
+                                        <span class="small fw-600">Internal Score Avg</span>
+                                        <span class="badge-soft badge-soft-indigo">
                                             {% if selected_student %}
                                                 {{ "%.1f"|format(student_data.internal) }}
                                             {% else %}
                                                 {{ "%.1f"|format(class_internal) }}
                                             {% endif %}
-                                        </h3>
-                                        <div class="small">
-                                            {% if selected_student %}
-                                                {% set diff = student_data.internal - class_internal %}
-                                                <span class="{{ 'text-success' if diff >= 0 else 'text-danger' }}">
-                                                    <i class="bi {{ 'bi-arrow-up' if diff >= 0 else 'bi-arrow-down' }}"></i>
-                                                    {{ "%.1f"|format(diff|abs) }} vs Class
-                                                </span>
-                                            {% else %}
-                                                <span class="text-slate-400">Benchmark: 25.0</span>
-                                            {% endif %}
-                                        </div>
+                                        </span>
                                     </div>
-                                    <div class="progress mt-2" style="height: 6px;">
-                                        <div class="progress-bar bg-primary" style="width: {{ ((student_data.internal if selected_student else class_internal) / 40) * 100 }}%"></div>
+                                    <div class="progress" style="height: 10px; border-radius: 5px;">
+                                        {% set val = student_data.internal if selected_student else class_internal %}
+                                        <div class="progress-bar bg-primary" style="width: {{ (val/40)*100 }}%"></div>
                                     </div>
+                                    <div class="text-end small text-zinc-400 mt-1">/ 40.0</div>
                                 </div>
 
                                 <div class="mb-4">
-                                    <label class="small text-muted mb-1">External Average</label>
-                                    <div class="d-flex align-items-center gap-3">
-                                        <h3 class="fw-800 mb-0 text-success">
+                                    <div class="d-flex justify-content-between mb-2">
+                                        <span class="small fw-600">External Score Avg</span>
+                                        <span class="badge-soft badge-soft-emerald">
                                             {% if selected_student %}
                                                 {{ "%.1f"|format(student_data.external) }}
                                             {% else %}
                                                 {{ "%.1f"|format(class_external) }}
                                             {% endif %}
-                                        </h3>
-                                        <div class="small text-slate-400">Out of 60.0</div>
+                                        </span>
                                     </div>
-                                    <div class="progress mt-2" style="height: 6px;">
-                                        <div class="progress-bar bg-success" style="width: {{ ((student_data.external if selected_student else class_external) / 60) * 100 }}%"></div>
+                                    <div class="progress" style="height: 10px; border-radius: 5px;">
+                                        {% set val_ext = student_data.external if selected_student else class_external %}
+                                        <div class="progress-bar bg-success" style="width: {{ (val_ext/60)*100 }}%"></div>
                                     </div>
+                                    <div class="text-end small text-zinc-400 mt-1">/ 60.0</div>
                                 </div>
 
-                                <div class="mt-5 p-3 rounded-4 bg-white shadow-sm border border-primary border-opacity-10 text-center">
-                                    <div class="small text-muted mb-1">Placement Eligibility Weight</div>
-                                    <div class="h2 fw-800 text-slate-900">
+                                <div class="mt-5 p-4 rounded-4 text-center glass-panel" style="background: linear-gradient(135deg, #f5f3ff 0%, #ede9fe 100%);">
+                                    <div class="small fw-bold text-zinc-500 mb-1">Placement Eligibility</div>
+                                    <div class="display-6 fw-800 text-primary">
                                         {% if selected_student %}
                                             {{ "%.0f"|format( ((student_data.internal/40) + (student_data.external/60)) * 50 ) }}%
                                         {% else %}
@@ -145,20 +166,20 @@
                             </div>
                         </div>
 
-                        <!-- Right: Creative Charts -->
+                        <!-- Graphical Charts -->
                         <div class="col-lg-8">
                             <div class="row g-4">
-                                <div class="col-md-6">
-                                    <div class="chart-container" style="position: relative; height:300px; width:100%">
+                                <div class="col-md-6 text-center">
+                                    <div class="chart-container" style="position: relative; height:320px;">
                                         <canvas id="performanceRadar"></canvas>
                                     </div>
-                                    <p class="text-center small text-muted mt-2 fw-bold">Skill Matrix Analysis</p>
+                                    <div class="small fw-bold text-zinc-500 mt-3">Skill Matrix Matrix (Mock Exams)</div>
                                 </div>
-                                <div class="col-md-6">
-                                    <div class="chart-container" style="position: relative; height:300px; width:100%">
+                                <div class="col-md-6 text-center">
+                                    <div class="chart-container" style="position: relative; height:320px;">
                                         <canvas id="scoreComparison"></canvas>
                                     </div>
-                                    <p class="text-center small text-muted mt-2 fw-bold">Development Path Comparison</p>
+                                    <div class="small fw-bold text-zinc-500 mt-3">Course Outcome Analysis</div>
                                 </div>
                             </div>
                         </div>
@@ -167,213 +188,258 @@
             </div>
         </div>
 
-        <!-- Courses Section -->
-        <div class="col-lg-8 mb-4">
+        <!-- Subject Performance Table -->
+        {% if selected_student and student_data and student_data.subject_data %}
+        <div class="col-lg-12">
             <div class="card border-0 shadow-sm">
-                <div class="card-header">
-                    <i class="bi bi-journal-bookmark-fill text-primary"></i> 
-                    <span>Assigned Courses</span>
+                <div class="card-header bg-white border-bottom-0 px-4 py-3" style="background: #f8fafc;">
+                    <h5 class="fw-800 mb-0 text-dark"><i class="bi bi-book-half text-primary"></i> Subject Performance for {{ selected_student.user.full_name }}</h5>
                 </div>
-                <div class="card-body">
+                <div class="card-body px-0 pb-0 pt-3">
+                    <div class="table-responsive">
+                        <table class="table mb-0 align-middle">
+                            <thead class="table-light">
+                                <tr>
+                                    <th>Subject</th>
+                                    <th class="text-center">Total</th>
+                                    <th class="text-center">Grade</th>
+                                    <th class="text-center">Status</th>
+                                </tr>
+                            </thead>
+                            <tbody>
+                                {% for sub in student_data.subject_data %}
+                                <tr>
+                                    <td>
+                                        <strong>{{ sub.code }}</strong><br>
+                                        <small class="text-muted">{{ sub.subject }}</small>
+                                    </td>
+                                    <td class="text-center fw-bold">{{ sub.total|round(1) }}</td>
+                                    <td class="text-center">
+                                        <span class="badge {% if sub.grade in ['A+','A'] %}bg-success{% elif sub.grade in ['B+','B'] %}bg-info{% elif sub.grade in ['C+','C'] %}bg-warning text-dark{% elif sub.grade == 'F' %}bg-danger{% else %}bg-secondary{% endif %}">
+                                            {{ sub.grade or 'N/A' }}
+                                        </span>
+                                    </td>
+                                    <td class="text-center">
+                                        <span class="badge {% if sub.status == 'Pass' %}bg-success{% elif sub.status == 'Fail' %}bg-danger{% else %}bg-secondary{% endif %}">
+                                            {{ sub.status }}
+                                        </span>
+                                    </td>
+                                </tr>
+                                {% endfor %}
+                            </tbody>
+                        </table>
+                    </div>
+                </div>
+            </div>
+        </div>
+        {% endif %}
+
+        <!-- Courses & Management -->
+        <div class="col-lg-8">
+            <div class="card border-0 shadow-sm h-100">
+                <div class="card-header bg-white pt-4 px-4 d-flex justify-content-between align-items-center border-0">
+                    <h5 class="fw-800 mb-0 d-flex align-items-center gap-2">
+                        <i class="bi bi-stack text-primary"></i>
+                        Active Course Load
+                    </h5>
+                    <span class="badge-soft badge-soft-zinc">{{ courses|length }} Courses Assigned</span>
+                </div>
+                <div class="card-body px-4 pb-4">
                     {% if courses %}
-                        <div class="table-responsive">
-                            <table class="table mb-0">
-                                <thead>
-                                    <tr>
-                                        <th>Code</th>
-                                        <th>Course Name</th>
-                                        <th>Students</th>
-                                        <th>Semester</th>
-                                        <th class="text-end">View</th>
-                                    </tr>
-                                </thead>
-                                <tbody>
-                                    {% for course in courses %}
-                                    <tr>
-                                        <td><span class="badge bg-light text-primary fw-bold">{{ course.course_code }}</span></td>
-                                        <td class="fw-semibold">{{ course.course_name }}</td>
-                                        <td>
-                                            <div class="d-flex align-items-center gap-2">
-                                                <i class="bi bi-people small text-muted"></i>
-                                                {{ course.enrollments|length }}
-                                            </div>
-                                        </td>
-                                        <td>Sem {{ course.program.semester }}</td>
-                                        <td class="text-end">
-                                            <a href="{{ url_for('analytics.course_analytics', course_id=course.id) }}" 
-                                               class="btn btn-sm btn-outline-primary">
-                                                <i class="bi bi-arrow-right"></i>
-                                            </a>
-                                        </td>
-                                    </tr>
-                                    {% endfor %}
-                                </tbody>
-                            </table>
-                        </div>
+                    <div class="table-responsive">
+                        <table class="table table-premium mb-0">
+                            <thead>
+                                <tr>
+                                    <th>Code</th>
+                                    <th>Name</th>
+                                    <th>Students</th>
+                                    <th>Sem</th>
+                                    <th class="text-end">Action</th>
+                                </tr>
+                            </thead>
+                            <tbody>
+                                {% for course in courses %}
+                                <tr>
+                                    <td><span class="badge-soft badge-soft-indigo">{{ course.course_code }}</span></td>
+                                    <td><div class="fw-600">{{ course.course_name }}</div></td>
+                                    <td>
+                                        <div class="d-flex align-items-center gap-2">
+                                            <i class="bi bi-people text-zinc-400"></i>
+                                            {{ course.enrollments|length }}
+                                        </div>
+                                    </td>
+                                    <td>Semester {{ course.program.semester }}</td>
+                                    <td class="text-end">
+                                        <a href="{{ url_for('analytics.subject_analytics', course_id=course.id) }}" class="btn btn-sm btn-light border py-1">
+                                            Analyze <i class="bi bi-chevron-right small"></i>
+                                        </a>
+                                    </td>
+                                </tr>
+                                {% endfor %}
+                            </tbody>
+                        </table>
+                    </div>
                     {% else %}
-                        <div class="text-center py-5">
-                            <img src="https://img.icons8.com/bubbles/100/000000/empty-box.png" alt="Empty">
-                            <p class="text-muted mt-3">No courses assigned yet</p>
-                        </div>
+                    <div class="text-center py-5">
+                        <i class="bi bi-inbox h1 text-zinc-200"></i>
+                        <p class="text-zinc-500 mt-2">No active courses found.</p>
+                    </div>
                     {% endif %}
                 </div>
             </div>
         </div>
 
-        <!-- Quick Actions & Info -->
-        <div class="col-lg-4 mb-4">
-            <div class="card border-0 shadow-sm mb-4">
-                <div class="card-header">
-                    <i class="bi bi-lightning-charge-fill text-warning"></i>
-                    <span>Quick Management</span>
+        <div class="col-lg-4">
+            <!-- Faculty Workload Widget -->
+            <div class="card mb-4 border-0 shadow-sm glass-panel" style="background: linear-gradient(to bottom right, rgba(255,255,255,0.75), rgba(240,253,244,0.75));">
+                <div class="card-header pt-4 px-4 border-0">
+                    <h6 class="fw-800 mb-0 d-flex align-items-center gap-2">
+                        <i class="bi bi-calendar-check text-success"></i>
+                        Evaluation Progress
+                    </h6>
                 </div>
-                <div class="card-body">
-                    <div class="d-grid gap-3">
-                        <a href="{{ url_for('results.add_marks') }}" class="btn btn-primary d-flex align-items-center justify-content-between">
-                            <span>Bulk Upload (CSV)</span>
-                            <i class="bi bi-chevron-right small"></i>
-                        </a>
-                        <a href="{{ url_for('results.add_placement_scores') }}" class="btn btn-outline-primary d-flex align-items-center justify-content-between">
-                            <span>Placement Scores</span>
-                            <i class="bi bi-bar-chart-fill"></i>
+                <div class="card-body px-4 pb-4">
+                    <div class="mb-4">
+                        <div class="d-flex justify-content-between small mb-2">
+                            <span>Sessional 1 Marks</span>
+                            <span class="fw-bold">85% Complete</span>
+                        </div>
+                        <div class="progress" style="height: 6px;">
+                            <div class="progress-bar bg-success" style="width: 85%"></div>
+                        </div>
+                    </div>
+                    <div class="mb-4">
+                        <div class="d-flex justify-content-between small mb-2">
+                            <span>Practical Assessments</span>
+                            <span class="fw-bold">40% Complete</span>
+                        </div>
+                        <div class="progress" style="height: 6px;">
+                            <div class="progress-bar bg-warning" style="width: 40%"></div>
+                        </div>
+                    </div>
+                    <div class="d-grid">
+                        <a href="{{ url_for('results.add_marks') }}" class="btn btn-dark text-white shadow-sm">
+                            Bulk Mark Upload <i class="bi bi-upload ms-2"></i>
                         </a>
                     </div>
                 </div>
             </div>
 
+            <!-- Profile Overview -->
             <div class="card border-0 shadow-sm">
-                <div class="card-header">
-                    <i class="bi bi-person-badge-fill text-success"></i>
-                    <span>Identification</span>
-                </div>
-                <div class="card-body">
-                    <div class="d-flex align-items-center gap-3 mb-4">
-                        <div class="avatar-circle" style="width: 50px; height: 50px; font-size: 1.2rem;">
-                            {{ current_user.full_name[0] }}
+                <div class="card-body text-center py-5 px-4">
+                    <div class="avatar-circle mx-auto mb-3" style="width: 72px; height: 72px; font-size: 2rem; background: var(--zinc-900); color: white;">
+                        {{ current_user.full_name[0] }}
+                    </div>
+                    <h5 class="fw-800 mb-0">{{ current_user.full_name }}</h5>
+                    <p class="small text-zinc-500 mb-4">{{ current_user.email }}</p>
+                    
+                    <div class="p-3 rounded-4 bg-zinc-50 border text-start">
+                        <div class="d-flex justify-content-between small mb-1">
+                            <span class="text-zinc-500">Designation</span>
+                            <span class="fw-bold text-zinc-900">Professor (IT)</span>
                         </div>
-                        <div>
-                            <div class="fw-bold">{{ current_user.full_name }}</div>
-                            <div class="text-muted small">{{ current_user.email }}</div>
+                        <div class="d-flex justify-content-between small mb-1">
+                            <span class="text-zinc-500">Employee ID</span>
+                            <span class="fw-bold text-zinc-900">JIMS-{{ current_user.id + 1000 }}</span>
                         </div>
                     </div>
-                    <div class="p-3 bg-light rounded-3">
-                        <div class="d-flex justify-content-between small mb-2">
-                            <span class="text-muted">Role</span>
-                            <span class="badge bg-success text-uppercase">{{ current_user.role }}</span>
-                        </div>
-                        <div class="d-flex justify-content-between small">
-                            <span class="text-muted">Department</span>
-                            <span class="fw-600">Computer Science</span>
-                        </div>
-                    </div>
+                    <a href="{{ url_for('dashboard.profile') }}" class="btn btn-link btn-sm mt-3 text-primary text-decoration-none">Edit Profile</a>
                 </div>
             </div>
         </div>
     </div>
 </div>
-
-<style>
-.hero-section {
-    animation: fadeInDown 0.8s ease-out;
-}
-
-.stats-section .stat-box {
-    animation: slideInUp 0.6s ease-out;
-}
-
-@keyframes fadeInDown {
-    from {
-        opacity: 0;
-        transform: translateY(-20px);
-    }
-    to {
-        opacity: 1;
-        transform: translateY(0);
-    }
-}
-
-@keyframes slideInUp {
-    from {
-        opacity: 0;
-        transform: translateY(30px);
-    }
-    to {
-        opacity: 1;
-        transform: translateY(0);
-    }
-}
-</style>
 {% endblock %}
 
 {% block extra_js %}
 <script>
 document.addEventListener('DOMContentLoaded', function() {
-    // Data from Backend
     const classP = {{ class_p|tojson }};
     const studentData = {{ student_data|tojson if student_data else 'null' }};
     const classInternal = {{ class_internal }};
     const classExternal = {{ class_external }};
 
-    // 1. Placement Radar Chart
+    const createGradient = (ctx, color) => {
+        const gradient = ctx.createLinearGradient(0, 0, 0, 320);
+        gradient.addColorStop(0, color.replace(/rgba\((.+),\s*0\.\d+\)/, 'rgba($1, 0.8)'));
+        gradient.addColorStop(1, color.replace(/rgba\((.+),\s*0\.\d+\)/, 'rgba($1, 0.2)'));
+        return gradient;
+    };
+
+    // 1. Radar Chart Setup
     const ctxRadar = document.getElementById('performanceRadar').getContext('2d');
+    const radarData = {
+        labels: ['DSA', 'Aptitude', 'Interview'],
+        datasets: [{
+            label: 'Class Avg',
+            data: [classP.dsa, classP.aptitude, classP.interview],
+            fill: true,
+            backgroundColor: createGradient(ctxRadar, 'rgba(99, 102, 241, 0.4)'),
+            borderColor: 'rgba(99, 102, 241, 0.85)',
+            borderWidth: 2,
+            pointBackgroundColor: '#6366f1',
+            pointRadius: 5
+        }]
+    };
+
+    if (studentData) {
+        radarData.datasets.push({
+            label: 'Selected Student',
+            data: [studentData.p.dsa, studentData.p.aptitude, studentData.p.interview],
+            fill: true,
+            backgroundColor: createGradient(ctxRadar, 'rgba(16, 185, 129, 0.35)'),
+            borderColor: '#10b981',
+            borderWidth: 3,
+            pointBackgroundColor: '#10b981',
+            pointRadius: 5
+        });
+    }
+
     new Chart(ctxRadar, {
         type: 'radar',
-        data: {
-            labels: ['Technical (DSA)', 'Aptitude', 'Interview'],
-            datasets: [
-                {
-                    label: 'Class Average',
-                    data: [classP.dsa, classP.aptitude, classP.interview],
-                    fill: true,
-                    backgroundColor: 'rgba(79, 70, 229, 0.1)',
-                    borderColor: 'rgba(79, 70, 229, 0.5)',
-                    pointBackgroundColor: 'rgba(79, 70, 229, 1)',
-                },
-                {% if student_data %}
-                {
-                    label: '{{ selected_student.user.full_name }}',
-                    data: [studentData.p.dsa, studentData.p.aptitude, studentData.p.interview],
-                    fill: true,
-                    backgroundColor: 'rgba(16, 185, 129, 0.2)',
-                    borderColor: 'rgb(16, 185, 129)',
-                    pointBackgroundColor: 'rgb(16, 185, 129)',
-                }
-                {% endif %}
-            ]
-        },
+        data: radarData,
         options: {
+            responsive: true,
+            maintainAspectRatio: false,
             scales: {
                 r: {
-                    angleLines: { display: false },
-                    suggestedMin: 0,
-                    suggestedMax: 100
+                    beginAtZero: true,
+                    max: 100,
+                    grid: { color: 'rgba(15, 23, 42, 0.12)' },
+                    angleLines: { color: 'rgba(15, 23, 42, 0.08)' },
+                    pointLabels: { color: '#475569', font: { size: 12, weight: '600' } }
                 }
             },
             plugins: {
-                legend: { position: 'bottom' }
-            }
+                legend: { position: 'bottom', labels: { usePointStyle: true, padding: 16 } },
+                tooltip: { backgroundColor: 'rgba(15, 23, 42, 0.92)', titleColor: '#fff', bodyColor: '#e2e8f0' }
+            },
+            elements: { line: { tension: 0.4 } }
         }
     });
 
-    // 2. Score Comparison Bar Chart
+    // 2. Bar Chart Setup
     const ctxBar = document.getElementById('scoreComparison').getContext('2d');
     new Chart(ctxBar, {
         type: 'bar',
         data: {
-            labels: ['Internal Assessment', 'External Exam'],
+            labels: ['Internal', 'External'],
             datasets: [
                 {
-                    label: 'Class Avg',
+                    label: 'Class Benchmark',
                     data: [classInternal, classExternal],
-                    backgroundColor: 'rgba(148, 163, 184, 0.5)',
-                    borderRadius: 8
+                    backgroundColor: '#e5e7eb',
+                    borderRadius: 16,
+                    barThickness: 40
                 },
                 {% if student_data %}
                 {
-                    label: '{{ selected_student.registration_number }} Score',
+                    label: 'Selected Student',
                     data: [studentData.internal, studentData.external],
-                    backgroundColor: 'rgba(79, 70, 229, 0.8)',
-                    borderRadius: 8
+                    backgroundColor: '#6366f1',
+                    borderRadius: 16,
+                    barThickness: 40
                 }
                 {% endif %}
             ]
@@ -381,11 +447,22 @@ document.addEventListener('DOMContentLoaded', function() {
         options: {
             responsive: true,
             maintainAspectRatio: false,
-            plugins: {
-                legend: { position: 'bottom' }
-            },
+            layout: { padding: 12 },
             scales: {
-                y: { beginAtZero: true, max: 100 }
+                y: {
+                    beginAtZero: true,
+                    max: 100,
+                    grid: { color: 'rgba(15, 23, 42, 0.08)' },
+                    ticks: { color: '#475569' }
+                },
+                x: {
+                    grid: { display: false },
+                    ticks: { color: '#475569' }
+                }
+            },
+            plugins: {
+                legend: { position: 'bottom', labels: { usePointStyle: true, padding: 16 } },
+                tooltip: { backgroundColor: 'rgba(15, 23, 42, 0.92)', titleColor: '#fff', bodyColor: '#e2e8f0' }
             }
         }
     });

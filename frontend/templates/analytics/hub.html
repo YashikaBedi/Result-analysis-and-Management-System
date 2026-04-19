@@ -1,0 +1,814 @@
+{% extends "base.html" %}
+{% block title %}Analysis Hub — JIMS SEC-5{% endblock %}
+
+{% block content %}
+<div class="py-4 animate-up">
+
+  <!-- ━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━ -->
+  <!-- HERO BANNER – different gradient per role              -->
+  <!-- ━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━ -->
+  {% if current_user.role == 'student' %}
+  <div class="hub-hero" style="background:linear-gradient(135deg,#1e1b4b,#4338ca);">
+  {% elif current_user.role == 'faculty' %}
+  <div class="hub-hero" style="background:linear-gradient(135deg,#064e3b,#059669);">
+  {% else %}
+  <div class="hub-hero" style="background:linear-gradient(135deg,#312e81,#7c3aed);">
+  {% endif %}
+    <div class="row align-items-center">
+      <div class="col-lg-8">
+        {% if current_user.role == 'student' %}
+        <div class="badge-soft badge-soft-indigo mb-3">Your Academic Profile</div>
+        <h1 class="display-4 fw-800 mb-2">Personal Analytics</h1>
+        <p class="opacity-75">Track your progress, internal vs external performance, and placement readiness.</p>
+        {% elif current_user.role == 'faculty' %}
+        <div class="badge-soft badge-soft-emerald mb-3">Faculty Analytics Workspace</div>
+        <h1 class="display-4 fw-800 mb-2">Analysis Hub</h1>
+        <p class="opacity-75">Manage class performance, compare sections, and analyse student growth across your courses.</p>
+        {% else %}
+        <div class="badge-soft badge-soft-indigo mb-3">Institutional Intelligence</div>
+        <h1 class="display-4 fw-800 mb-2">Analysis Hub</h1>
+        <p class="opacity-75">Department-level performance, subject analytics, and institutional grade distribution.</p>
+        {% endif %}
+      </div>
+      <div class="col-lg-4 text-end d-none d-lg-block">
+        <i class="bi bi-graph-up-arrow" style="font-size:9rem;opacity:0.08;"></i>
+      </div>
+    </div>
+  </div>
+
+  <!-- ━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━ -->
+  <!-- STUDENT VIEW                                           -->
+  <!-- ━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━ -->
+  {% if current_user.role == 'student' %}
+  {% if students %}
+  {% set me = students[0] %}
+
+  <!-- In-page student analytics (no redirect needed) -->
+  <div class="row g-4 mt-3">
+
+    <!-- Stats strip -->
+    <div class="col-12">
+      <div class="row g-3">
+        {% for label, val, cls, icon in [
+           ('Cumulative GPA', student_preview.gpa if student_preview else '—', 'badge-soft-indigo', 'bi-star-fill'),
+           ('Subjects Passed', (student_preview.stats.passed_courses|string + ' / ' + student_preview.stats.total_courses|string) if student_preview else '—', 'badge-soft-emerald', 'bi-check-circle-fill'),
+           ('Avg Marks', (student_preview.stats.average_marks|string + '%') if student_preview else '—', 'badge-soft-amber', 'bi-bar-chart-fill'),
+           ('Placement Avg', (student_preview.placement_data.average|round(1)|string + '%') if (student_preview and student_preview.placement_data) else 'N/A', 'badge-soft-rose', 'bi-briefcase-fill')
+        ] %}
+        <div class="col-6 col-md-3">
+          <div class="stat-box text-center border-0 shadow-sm h-100">
+            <div class="fx-4 fw-800 mb-1 text-primary {{ cls }} d-inline-block px-3 py-1 rounded-pill">{{ val }}</div>
+            <div class="stat-label mt-2"><i class="bi {{ icon }} me-1 opacity-50"></i>{{ label }}</div>
+          </div>
+        </div>
+        {% endfor %}
+      </div>
+    </div>
+
+    <!-- Charts: Growth + Distribution -->
+    <div class="col-lg-7">
+      <div class="card border-0 shadow-sm h-100">
+        <div class="card-header bg-white border-0 pt-4 px-4">
+          <h5 class="fw-800 mb-0"><i class="bi bi-graph-up-arrow text-primary me-2"></i>Semester Performance Trend</h5>
+        </div>
+        <div class="card-body p-4">
+          <div style="height:320px;"><canvas id="studentGrowthChart"></canvas></div>
+          {% if not trend_labels %}<p class="text-center text-muted pt-4">No multi-semester data yet.</p>{% endif %}
+        </div>
+      </div>
+    </div>
+    <div class="col-lg-5">
+      <div class="card border-0 shadow-sm h-100">
+        <div class="card-header bg-white border-0 pt-4 px-4">
+          <h5 class="fw-800 mb-0"><i class="bi bi-pie-chart-fill text-secondary me-2"></i>Internal vs External</h5>
+        </div>
+        <div class="card-body p-4">
+          <div style="height:260px;"><canvas id="intExtDonut"></canvas></div>
+          <div class="row g-2 mt-2 text-center">
+            <div class="col-6"><div class="p-2 rounded-3 bg-light"><div class="extra-small text-muted">Internal Avg</div><div class="fw-800 text-primary">{{ student_preview.internal if student_preview else '—' }}</div></div></div>
+            <div class="col-6"><div class="p-2 rounded-3 bg-light"><div class="extra-small text-muted">External Avg</div><div class="fw-800 text-secondary">{{ student_preview.external if student_preview else '—' }}</div></div></div>
+          </div>
+        </div>
+      </div>
+    </div>
+
+    <!-- Subject Detail Table -->
+    {% if student_preview and student_preview.subject_data %}
+    <div class="col-12">
+      <div class="card border-0 shadow-sm">
+        <div class="card-header bg-white border-0 pt-4 px-4">
+          <h5 class="fw-800 mb-0"><i class="bi bi-table text-primary me-2"></i>Subject-wise Breakdown</h5>
+        </div>
+        <div class="card-body p-0">
+          <div class="table-responsive">
+            <table class="table table-premium align-middle mb-0">
+              <thead>
+                <tr>
+                  <th class="ps-4 py-3">Subject</th>
+                  <th class="text-center">CIE (1/2/3)</th>
+                  <th class="text-center">IE (1/2)</th>
+                  <th class="text-center">Internal</th>
+                  <th class="text-center">External</th>
+                  <th class="text-center">Total</th>
+                  <th class="text-center pe-4">Grade</th>
+                </tr>
+              </thead>
+              <tbody>
+                {% for s in student_preview.subject_data %}
+                <tr>
+                  <td class="ps-4"><div class="fw-bold">{{ s.code }}</div><div class="extra-small text-muted">{{ s.subject }}</div></td>
+                  <td class="text-center small">{{ s.total }} — </td>
+                  <td class="text-center small">—</td>
+                  <td class="text-center"><span class="badge bg-primary bg-opacity-10 text-primary fw-bold">{{ s.total }}</span></td>
+                  <td class="text-center fw-bold text-muted">—</td>
+                  <td class="text-center fw-800 fs-6">{{ s.total }}</td>
+                  <td class="text-center pe-4"><span class="badge-soft {% if s.grade in ['A+','A'] %}badge-soft-emerald{% elif s.grade == 'F' %}badge-soft-rose{% else %}badge-soft-amber{% endif %}">{{ s.grade or '—' }}</span></td>
+                </tr>
+                {% endfor %}
+              </tbody>
+            </table>
+          </div>
+        </div>
+      </div>
+    </div>
+    {% endif %}
+
+    <div class="col-12 text-center mt-2">
+      <a href="{{ url_for('analytics.student_analytics', student_id=me.id) }}" class="btn btn-primary btn-lg px-5 shadow">
+        <i class="bi bi-person-chart me-2"></i>Open Full Performance Report
+      </a>
+    </div>
+  </div>
+
+  {% else %}
+  <div class="text-center py-5 mt-4"><p class="text-muted">Please complete your student profile to view analytics.</p></div>
+  {% endif %}
+
+
+  <!-- ━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━ -->
+  <!-- FACULTY VIEW                                           -->
+  <!-- ━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━ -->
+  {% elif current_user.role == 'faculty' %}
+
+  <!-- Tabs -->
+  <ul class="nav nav-pills mt-4 mb-4 gap-2" id="facultyTabs">
+    <li class="nav-item"><a class="nav-link active" data-bs-toggle="pill" href="#tabMyClass">My Class Overview</a></li>
+    <li class="nav-item"><a class="nav-link" data-bs-toggle="pill" href="#tabStudentSearch">Student Lookup</a></li>
+    <li class="nav-item"><a class="nav-link" data-bs-toggle="pill" href="#tabSubjectDeep">Subject Deep-Dive</a></li>
+  </ul>
+
+  <div class="tab-content">
+
+    <!-- TAB 1: Class Overview -->
+    <div class="tab-pane fade show active" id="tabMyClass">
+      <!-- Summary cards -->
+      <div class="row g-4 mb-4">
+        {% set total_enrolled = namespace(c=0) %}
+        {% for c in courses %}{% set total_enrolled.c = total_enrolled.c + c.enrollments|length %}{% endfor %}
+        {% for label, val, color, icon in [
+           ('Courses Assigned', courses|length, '#6366f1', 'bi-stack'),
+           ('Students Enrolled', total_enrolled.c, '#059669', 'bi-people-fill'),
+           ('Overall Pass Rate', overall_pass_rate|string + '%', '#f59e0b', 'bi-check2-all'),
+           ('Courses in Analysis', courses|length, '#d946ef', 'bi-bar-chart-line-fill')
+        ] %}
+        <div class="col-6 col-md-3">
+          <div class="card border-0 shadow-sm text-center p-4" style="border-radius:20px;">
+            <div style="width:52px;height:52px;border-radius:14px;background:{{ color }}20;display:flex;align-items:center;justify-content:center;margin:0 auto 12px;">
+              <i class="bi {{ icon }} fs-5" style="color:{{ color }};"></i>
+            </div>
+            <div class="fw-800 fs-4 mb-1">{{ val }}</div>
+            <div class="extra-small text-muted fw-bold text-uppercase tracking-widest">{{ label }}</div>
+          </div>
+        </div>
+        {% endfor %}
+      </div>
+
+      <!-- Per-course performance table + chart -->
+      <div class="row g-4">
+        <div class="col-lg-7">
+          <div class="card border-0 shadow-sm">
+            <div class="card-header bg-white border-0 pt-4 px-4 d-flex justify-content-between align-items-center">
+              <h5 class="fw-800 mb-0"><i class="bi bi-card-list text-primary me-2"></i>Course Performance Summary</h5>
+            </div>
+            <div class="card-body p-0">
+              <div class="table-responsive">
+                <table class="table table-hover align-middle mb-0">
+                  <thead class="bg-light">
+                    <tr>
+                      <th class="ps-4 py-3">Subject</th>
+                      <th class="text-center">Section</th>
+                      <th class="text-center">Enrolled</th>
+                      <th class="text-center">Avg Marks</th>
+                      <th class="text-end pe-4">Action</th>
+                    </tr>
+                  </thead>
+                  <tbody>
+                    {% for c in courses %}
+                    {% set c_results = [] %}
+                    {% for r in c.results if r.examination_type == 'internal' %}{% set _ = c_results.append(r.academic_total) %}{% endfor %}
+                    {% set c_avg = (c_results|sum / c_results|length)|round(1) if c_results else 0 %}
+                    <tr>
+                      <td class="ps-4">
+                        <div class="fw-bold">{{ c.course_code }}</div>
+                        <div class="extra-small text-muted">{{ c.course_name }}</div>
+                      </td>
+                      <td class="text-center"><span class="badge bg-light border text-dark">{{ c.section }}</span></td>
+                      <td class="text-center fw-bold">{{ c.enrollments|length }}</td>
+                      <td class="text-center">
+                        <span class="fw-800 {% if c_avg >= 75 %}text-success{% elif c_avg >= 50 %}text-warning{% else %}text-danger{% endif %}">{{ c_avg }}</span>
+                      </td>
+                      <td class="text-end pe-4">
+                        <a href="{{ url_for('analytics.subject_analytics', course_id=c.id) }}" class="btn btn-sm btn-outline-primary">Analyse</a>
+                      </td>
+                    </tr>
+                    {% endfor %}
+                  </tbody>
+                </table>
+              </div>
+            </div>
+          </div>
+        </div>
+
+        <div class="col-lg-5">
+          <div class="card border-0 shadow-sm h-100">
+            <div class="card-header bg-white border-0 pt-4 px-4">
+              <h5 class="fw-800 mb-0"><i class="bi bi-pie-chart text-secondary me-2"></i>Grade Distribution</h5>
+            </div>
+            <div class="card-body p-4">
+              <div style="height:320px;"><canvas id="facultyGradeChart"></canvas></div>
+            </div>
+          </div>
+        </div>
+      </div>
+
+      <!-- Internal vs External class avg -->
+      <div class="row g-4 mt-1">
+        <div class="col-lg-6">
+          <div class="card border-0 shadow-sm">
+            <div class="card-header bg-white border-0 pt-4 px-4">
+              <h5 class="fw-800 mb-0"><i class="bi bi-bar-chart-fill text-primary me-2"></i>Internal vs External (Class Average)</h5>
+            </div>
+            <div class="card-body p-4">
+              <div style="height:260px;"><canvas id="facultyIntExtChart"></canvas></div>
+            </div>
+          </div>
+        </div>
+        <div class="col-lg-6">
+          <div class="card border-0 shadow-sm">
+            <div class="card-header bg-white border-0 pt-4 px-4 d-flex justify-content-between">
+              <h5 class="fw-800 mb-0"><i class="bi bi-trophy-fill text-warning me-2"></i>Top Performers</h5>
+              <span class="extra-small text-muted fw-bold pt-1 text-uppercase">Across All Courses</span>
+            </div>
+            <div class="card-body p-0">
+              <div class="table-responsive" style="max-height:260px;overflow-y:auto;">
+                <table class="table table-hover align-middle mb-0">
+                  <thead class="bg-light sticky-top">
+                    <tr>
+                      <th class="ps-4 py-2">Rank</th>
+                      <th>Student</th>
+                      <th class="text-end pe-4">Score</th>
+                    </tr>
+                  </thead>
+                  <tbody>
+                    {% set ranked = [] %}
+                    {% for s in students %}
+                      {% set s_results = [] %}
+                      {% for r in s.results if r.examination_type == 'internal' and r.course and r.course.faculty_id == current_user.id %}{% set _ = s_results.append(r.academic_total or 0) %}{% endfor %}
+                      {% if s_results %}{% set _ = ranked.append({'name': s.user.full_name, 'reg': s.registration_number, 'avg': (s_results|sum / s_results|length)|round(1), 'id': s.id}) %}{% endif %}
+                    {% endfor %}
+                    {% for item in ranked|sort(attribute='avg', reverse=True)|list %}
+                    <tr>
+                      <td class="ps-4">
+                        {% if loop.index == 1 %}<span class="badge bg-warning text-dark">#1</span>
+                        {% elif loop.index == 2 %}<span class="badge bg-secondary">#2</span>
+                        {% elif loop.index == 3 %}<span class="badge-soft" style="background:#cd7f3220;color:#cd7f32">#3</span>
+                        {% else %}<span class="text-muted small">#{{ loop.index }}</span>{% endif %}
+                      </td>
+                      <td>
+                        <a href="{{ url_for('analytics.student_analytics', student_id=item.id) }}" class="text-dark text-decoration-none fw-bold">{{ item.name }}</a>
+                        <div class="extra-small text-muted">{{ item.reg }}</div>
+                      </td>
+                      <td class="text-end pe-4 fw-800 text-primary">{{ item.avg }}</td>
+                    </tr>
+                    {% endfor %}
+                  </tbody>
+                </table>
+              </div>
+            </div>
+          </div>
+        </div>
+      </div>
+    </div><!-- end tab -->
+
+    <!-- TAB 2: Student Lookup -->
+    <div class="tab-pane fade" id="tabStudentSearch">
+      <div class="row g-4">
+        <div class="col-lg-4">
+          <div class="card border-0 shadow-sm">
+            <div class="card-header bg-white border-0 pt-4 px-4">
+              <h5 class="fw-800 mb-0"><i class="bi bi-search text-primary me-2"></i>Find a Student</h5>
+            </div>
+            <div class="card-body p-4">
+              <form method="GET" action="{{ url_for('analytics.analysis_hub') }}#tabStudentSearch">
+                <input type="hidden" name="tab" value="student">
+                <label class="form-label small fw-800 text-uppercase tracking-widest text-muted">Select Student</label>
+                <select name="student_id" class="form-select mb-3" onchange="this.form.submit()">
+                  <option value="">-- Choose Student --</option>
+                  {% for s in students %}
+                  <option value="{{ s.id }}" {% if selected_student and selected_student.id == s.id %}selected{% endif %}>
+                    {{ s.registration_number }} — {{ s.user.full_name }}
+                  </option>
+                  {% endfor %}
+                </select>
+              </form>
+
+              {% if selected_student %}
+              <!-- Student profile card -->
+              <div class="mt-3 p-4 rounded-4 bg-light">
+                <div class="d-flex align-items-center gap-3 mb-3">
+                  <div class="avatar-circle" style="width:52px;height:52px;font-size:1.4rem;background:var(--primary);color:white;">{{ selected_student.user.full_name[0].upper() }}</div>
+                  <div>
+                    <div class="fw-800 lh-1">{{ selected_student.user.full_name }}</div>
+                    <div class="extra-small text-muted">{{ selected_student.registration_number }}</div>
+                    <div class="extra-small text-muted">Sec {{ selected_student.section }} · {{ selected_student.department.name }}</div>
+                  </div>
+                </div>
+                {% if student_preview %}
+                <div class="row g-2 text-center">
+                  <div class="col-6"><div class="p-2 rounded-3 bg-white"><div class="fw-800 text-primary">{{ student_preview.gpa }}</div><div class="extra-small text-muted">GPA</div></div></div>
+                  <div class="col-6"><div class="p-2 rounded-3 bg-white"><div class="fw-800 text-success">{{ student_preview.stats.passed_courses }}/{{ student_preview.stats.total_courses }}</div><div class="extra-small text-muted">Passed</div></div></div>
+                  <div class="col-6"><div class="p-2 rounded-3 bg-white"><div class="fw-800 text-warning">{{ student_preview.internal }}</div><div class="extra-small text-muted">Avg Internal</div></div></div>
+                  <div class="col-6"><div class="p-2 rounded-3 bg-white"><div class="fw-800 text-info">{{ student_preview.external }}</div><div class="extra-small text-muted">Avg External</div></div></div>
+                </div>
+                {% endif %}
+                <div class="mt-3">
+                  <a href="{{ url_for('analytics.student_analytics', student_id=selected_student.id) }}" class="btn btn-primary w-100 fw-bold">
+                    <i class="bi bi-person-lines-fill me-2"></i>Full Report
+                  </a>
+                </div>
+              </div>
+              {% endif %}
+            </div>
+          </div>
+        </div>
+
+        <!-- Student mini chart panel -->
+        <div class="col-lg-8">
+          {% if selected_student and student_preview %}
+          <div class="card border-0 shadow-sm mb-4">
+            <div class="card-header bg-white border-0 pt-4 px-4">
+              <h5 class="fw-800 mb-0"><i class="bi bi-activity text-success me-2"></i>{{ selected_student.user.full_name }}'s Subject Scores</h5>
+            </div>
+            <div class="card-body p-4">
+              <div style="height:300px;"><canvas id="studentSubjectChart"></canvas></div>
+            </div>
+          </div>
+          {% if student_preview.subject_data %}
+          <div class="card border-0 shadow-sm">
+            <div class="card-body p-0">
+              <div class="table-responsive">
+                <table class="table table-hover align-middle mb-0">
+                  <thead class="bg-light"><tr><th class="ps-4 py-3">Subject</th><th class="text-center">Total</th><th class="text-center">Grade</th><th class="pe-4 text-center">Status</th></tr></thead>
+                  <tbody>
+                    {% for s in student_preview.subject_data %}
+                    <tr>
+                      <td class="ps-4"><div class="fw-bold">{{ s.code }}</div><div class="extra-small text-muted">{{ s.subject }}</div></td>
+                      <td class="text-center fw-800">{{ s.total }}</td>
+                      <td class="text-center"><span class="badge-soft {% if s.grade in ['A+','A'] %}badge-soft-emerald{% elif s.grade == 'F' %}badge-soft-rose{% else %}badge-soft-amber{% endif %}">{{ s.grade or '—' }}</span></td>
+                      <td class="pe-4 text-center">{% if s.status == 'Pass' %}<i class="bi bi-check-circle-fill text-success"></i>{% else %}<i class="bi bi-x-circle-fill text-danger"></i>{% endif %}</td>
+                    </tr>
+                    {% endfor %}
+                  </tbody>
+                </table>
+              </div>
+            </div>
+          </div>
+          {% endif %}
+          {% else %}
+          <div class="text-center py-5 mt-4">
+            <i class="bi bi-person-bounding-box fs-1 text-muted opacity-25"></i>
+            <h5 class="mt-4 fw-bold text-muted">Select a student to preview their analytics</h5>
+          </div>
+          {% endif %}
+        </div>
+      </div>
+    </div><!-- end tab -->
+
+    <!-- TAB 3: Subject Deep Dive -->
+    <div class="tab-pane fade" id="tabSubjectDeep">
+      <div class="row g-4">
+        <div class="col-lg-4">
+          <div class="card border-0 shadow-sm">
+            <div class="card-header bg-white border-0 pt-4 px-4">
+              <h5 class="fw-800 mb-0"><i class="bi bi-journal-text text-secondary me-2"></i>Select Subject</h5>
+            </div>
+            <div class="card-body p-4">
+              <form method="GET" action="{{ url_for('analytics.analysis_hub') }}">
+                <input type="hidden" name="tab" value="subject">
+                <label class="form-label small fw-800 text-uppercase tracking-widest text-muted">My Courses</label>
+                <select name="course_id" class="form-select mb-3" onchange="this.form.submit()">
+                  <option value="">-- Choose Subject --</option>
+                  {% for c in courses %}
+                  <option value="{{ c.id }}" {% if selected_course and selected_course.id == c.id %}selected{% endif %}>
+                    {{ c.course_code }} — {{ c.course_name }} (Sec {{ c.section }})
+                  </option>
+                  {% endfor %}
+                </select>
+              </form>
+
+              {% if selected_course and course_preview %}
+              <div class="mt-3 p-4 rounded-4 bg-light">
+                <h6 class="fw-800 mb-3">{{ selected_course.course_name }}</h6>
+                <div class="row g-2 text-center">
+                  <div class="col-6"><div class="p-2 rounded-3 bg-white"><div class="fw-800 text-primary">{{ course_preview.average }}</div><div class="extra-small text-muted">Class Avg</div></div></div>
+                  <div class="col-6"><div class="p-2 rounded-3 bg-white"><div class="fw-800 text-success">{{ course_preview.pass_rate }}%</div><div class="extra-small text-muted">Pass Rate</div></div></div>
+                  <div class="col-12"><div class="p-2 rounded-3 bg-white"><div class="fw-800 text-info">{{ course_preview.enrolled }}</div><div class="extra-small text-muted">Students Enrolled</div></div></div>
+                </div>
+                <div class="mt-3">
+                  <a href="{{ url_for('analytics.subject_analytics', course_id=selected_course.id) }}" class="btn btn-secondary w-100 fw-bold">
+                    <i class="bi bi-graph-up me-2"></i>Full Subject Report
+                  </a>
+                </div>
+              </div>
+              {% endif %}
+            </div>
+          </div>
+        </div>
+
+        <div class="col-lg-8">
+          {% if selected_course and course_preview %}
+          <div class="card border-0 shadow-sm mb-4">
+            <div class="card-header bg-white border-0 pt-4 px-4">
+              <h5 class="fw-800 mb-0"><i class="bi bi-bar-chart-fill text-secondary me-2"></i>Grade Distribution — {{ selected_course.course_code }}</h5>
+            </div>
+            <div class="card-body p-4"><div style="height:300px;"><canvas id="subjectGradeChart"></canvas></div></div>
+          </div>
+          {% else %}
+          <div class="text-center py-5 mt-4">
+            <i class="bi bi-book-half fs-1 text-muted opacity-25"></i>
+            <h5 class="mt-4 fw-bold text-muted">Select a subject to preview its grade breakdown</h5>
+          </div>
+          {% endif %}
+        </div>
+      </div>
+
+      <!-- Quick action buttons -->
+      <div class="row g-3 mt-3">
+        <div class="col-12"><h6 class="fw-800 text-muted text-uppercase tracking-widest small mb-3">Quick Actions</h6></div>
+        <div class="col-md-3">
+          <a href="{{ url_for('results.add_internal_marks') }}" class="card border-0 shadow-sm text-decoration-none h-100">
+            <div class="card-body p-4 text-center">
+              <div class="logo-circle mx-auto mb-3" style="background:var(--primary-bg-light);color:var(--primary);"><i class="bi bi-pencil-square"></i></div>
+              <div class="fw-bold">Entry Marks</div>
+              <div class="extra-small text-muted">Add CIE / IE / Practical</div>
+            </div>
+          </a>
+        </div>
+        <div class="col-md-3">
+          <a href="{{ url_for('results.add_marks') }}" class="card border-0 shadow-sm text-decoration-none h-100">
+            <div class="card-body p-4 text-center">
+              <div class="logo-circle mx-auto mb-3" style="background:#dcfce7;color:#059669;"><i class="bi bi-cloud-arrow-up-fill"></i></div>
+              <div class="fw-bold">Bulk Upload</div>
+              <div class="extra-small text-muted">Upload CSV Result File</div>
+            </div>
+          </a>
+        </div>
+        <div class="col-md-3">
+          <a href="{{ url_for('results.view_results') }}" class="card border-0 shadow-sm text-decoration-none h-100">
+            <div class="card-body p-4 text-center">
+              <div class="logo-circle mx-auto mb-3" style="background:#fef3c7;color:#d97706;"><i class="bi bi-clipboard-data-fill"></i></div>
+              <div class="fw-bold">View Results</div>
+              <div class="extra-small text-muted">Browse All Records</div>
+            </div>
+          </a>
+        </div>
+        <div class="col-md-3">
+          <a href="{{ url_for('results.add_placement_scores') }}" class="card border-0 shadow-sm text-decoration-none h-100">
+            <div class="card-body p-4 text-center">
+              <div class="logo-circle mx-auto mb-3" style="background:#fce7f3;color:#be185d;"><i class="bi bi-briefcase-fill"></i></div>
+              <div class="fw-bold">Placement Scores</div>
+              <div class="extra-small text-muted">DSA, Aptitude, Interview</div>
+            </div>
+          </a>
+        </div>
+      </div>
+    </div><!-- end tab -->
+
+  </div><!-- end tab-content -->
+
+
+  <!-- ━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━ -->
+  <!-- ADMIN VIEW                                             -->
+  <!-- ━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━ -->
+  {% else %}
+
+  <!-- Admin tabs -->
+  <ul class="nav nav-pills mt-4 mb-4 gap-2" id="adminTabs">
+    <li class="nav-item"><a class="nav-link active" data-bs-toggle="pill" href="#tabInstitution">Institution Overview</a></li>
+    <li class="nav-item"><a class="nav-link" data-bs-toggle="pill" href="#tabAdminStudent">Student Analytics</a></li>
+    <li class="nav-item"><a class="nav-link" data-bs-toggle="pill" href="#tabAdminSubject">Subject Analytics</a></li>
+  </ul>
+
+  <div class="tab-content">
+
+    <!-- TAB 1: Institution Overview -->
+    <div class="tab-pane fade show active" id="tabInstitution">
+      <div class="row g-4 mb-4">
+        {% for label, val, color, icon in [
+           ('Total Students', students|length, '#6366f1','bi-people-fill'),
+           ('Active Subjects', courses|length, '#059669','bi-journal-bookmark-fill'),
+           ('Departments', departments|length, '#f59e0b','bi-building-fill'),
+           ('System Status', 'Live', '#d946ef','bi-lightning-charge-fill')
+        ] %}
+        <div class="col-6 col-md-3">
+          <div class="card border-0 shadow-sm text-center p-4" style="border-radius:20px;">
+            <div style="width:52px;height:52px;border-radius:14px;background:{{ color }}20;display:flex;align-items:center;justify-content:center;margin:0 auto 12px;"><i class="bi {{ icon }} fs-5" style="color:{{ color }};"></i></div>
+            <div class="fw-800 fs-4 mb-1">{{ val }}</div>
+            <div class="extra-small text-muted fw-bold text-uppercase tracking-widest">{{ label }}</div>
+          </div>
+        </div>
+        {% endfor %}
+      </div>
+
+      <div class="row g-4">
+        <div class="col-lg-6">
+          <div class="card border-0 shadow-sm h-100">
+            <div class="card-header bg-white border-0 pt-4 px-4"><h5 class="fw-800 mb-0"><i class="bi bi-pie-chart-fill me-2 text-primary"></i>College-Wide Grade Distribution</h5></div>
+            <div class="card-body p-4"><div style="height:320px;"><canvas id="adminGradeChart"></canvas></div></div>
+          </div>
+        </div>
+        <div class="col-lg-6">
+          <div class="card border-0 shadow-sm h-100">
+            <div class="card-header bg-white border-0 pt-4 px-4"><h5 class="fw-800 mb-0"><i class="bi bi-bar-chart-line-fill me-2 text-secondary"></i>Subjects by Average Score</h5></div>
+            <div class="card-body p-4"><div style="height:320px;"><canvas id="adminSubjectBar"></canvas></div></div>
+          </div>
+        </div>
+      </div>
+    </div>
+
+    <!-- TAB 2: Admin Student Analytics -->
+    <div class="tab-pane fade" id="tabAdminStudent">
+      <div class="row g-4">
+        <div class="col-lg-4">
+          <div class="card border-0 shadow-sm">
+            <div class="card-header bg-white border-0 pt-4 px-4"><h5 class="fw-800 mb-0">Find Student</h5></div>
+            <div class="card-body p-4">
+              <form method="GET" action="{{ url_for('analytics.analysis_hub') }}">
+                <input type="hidden" name="tab" value="student">
+                <select name="student_id" class="form-select mb-3" onchange="this.form.submit()">
+                  <option value="">-- Select Student --</option>
+                  {% for s in students %}
+                  <option value="{{ s.id }}" {% if selected_student and selected_student.id == s.id %}selected{% endif %}>{{ s.registration_number }} — {{ s.user.full_name }}</option>
+                  {% endfor %}
+                </select>
+              </form>
+              {% if selected_student %}
+              <div class="p-3 rounded-4 bg-light">
+                <div class="fw-800">{{ selected_student.user.full_name }}</div>
+                <div class="extra-small text-muted mb-3">{{ selected_student.registration_number }} · {{ selected_student.department.name }}</div>
+                {% if student_preview %}
+                <div class="row g-2 text-center">
+                  <div class="col-6"><div class="p-2 bg-white rounded-3"><div class="fw-800 text-primary">{{ student_preview.gpa }}</div><div class="extra-small text-muted">GPA</div></div></div>
+                  <div class="col-6"><div class="p-2 bg-white rounded-3"><div class="fw-800 text-success">{{ student_preview.stats.average_marks }}%</div><div class="extra-small text-muted">Avg Marks</div></div></div>
+                </div>
+                {% endif %}
+                <a href="{{ url_for('analytics.student_analytics', student_id=selected_student.id) }}" class="btn btn-primary w-100 mt-3 fw-bold">Full Report</a>
+              </div>
+              {% endif %}
+            </div>
+          </div>
+        </div>
+        <div class="col-lg-8">
+          {% if selected_student and student_preview and student_preview.subject_data %}
+          <div class="card border-0 shadow-sm">
+            <div class="card-header bg-white border-0 pt-4 px-4"><h5 class="fw-800 mb-0">{{ selected_student.user.full_name }} — Subject Scores</h5></div>
+            <div class="card-body p-4"><div style="height:350px;"><canvas id="adminStudentChart"></canvas></div></div>
+          </div>
+          {% else %}
+          <div class="text-center py-5"><i class="bi bi-search fs-1 text-muted opacity-25"></i><h5 class="mt-4 fw-bold text-muted">Select a student to view their analytics</h5></div>
+          {% endif %}
+        </div>
+      </div>
+    </div>
+
+    <!-- TAB 3: Admin Subject Analytics -->
+    <div class="tab-pane fade" id="tabAdminSubject">
+      <div class="row g-4">
+        <div class="col-lg-4">
+          <div class="card border-0 shadow-sm">
+            <div class="card-header bg-white border-0 pt-4 px-4"><h5 class="fw-800 mb-0">Select Subject</h5></div>
+            <div class="card-body p-4">
+              <form method="GET" action="{{ url_for('analytics.analysis_hub') }}">
+                <input type="hidden" name="tab" value="subject">
+                <select name="course_id" class="form-select mb-3" onchange="this.form.submit()">
+                  <option value="">-- All Subjects --</option>
+                  {% for c in courses %}
+                  <option value="{{ c.id }}" {% if selected_course and selected_course.id == c.id %}selected{% endif %}>{{ c.course_code }} — {{ c.course_name }} (Sec {{ c.section }})</option>
+                  {% endfor %}
+                </select>
+              </form>
+              {% if selected_course and course_preview %}
+              <div class="p-3 rounded-4 bg-light">
+                <div class="fw-800 mb-3">{{ selected_course.course_name }}</div>
+                <div class="row g-2 text-center">
+                  <div class="col-6"><div class="p-2 bg-white rounded-3"><div class="fw-800 text-primary">{{ course_preview.average }}</div><div class="extra-small text-muted">Avg Marks</div></div></div>
+                  <div class="col-6"><div class="p-2 bg-white rounded-3"><div class="fw-800 text-success">{{ course_preview.pass_rate }}%</div><div class="extra-small text-muted">Pass Rate</div></div></div>
+                </div>
+                <a href="{{ url_for('analytics.subject_analytics', course_id=selected_course.id) }}" class="btn btn-secondary w-100 mt-3 fw-bold">Full Subject Report</a>
+              </div>
+              {% endif %}
+            </div>
+          </div>
+        </div>
+        <div class="col-lg-8">
+          {% if selected_course and course_preview %}
+          <div class="card border-0 shadow-sm">
+            <div class="card-header bg-white border-0 pt-4 px-4"><h5 class="fw-800 mb-0">{{ selected_course.course_code }} — Grade Breakdown</h5></div>
+            <div class="card-body p-4"><div style="height:350px;"><canvas id="adminCourseGradeChart"></canvas></div></div>
+          </div>
+          {% else %}
+          <div class="text-center py-5"><i class="bi bi-journal-text fs-1 text-muted opacity-25"></i><h5 class="mt-4 fw-bold text-muted">Select a subject to preview</h5></div>
+          {% endif %}
+        </div>
+      </div>
+    </div>
+  </div>
+  {% endif %}
+
+</div>
+
+<style>
+.hub-hero { 
+    padding: 4rem; 
+    border-radius: 32px; 
+    margin-bottom: 2.5rem; 
+    color: white; 
+    position: relative;
+    overflow: hidden;
+    box-shadow: var(--deep-shadow);
+}
+.hub-hero::before {
+    content: '';
+    position: absolute;
+    top: -20%;
+    right: -10%;
+    width: 300px;
+    height: 300px;
+    background: rgba(255, 255, 255, 0.1);
+    border-radius: 50%;
+    pointer-events: none;
+}
+.stat-box { 
+    background: white; 
+    padding: 2rem; 
+    border-radius: 24px; 
+    box-shadow: var(--card-shadow);
+    transition: transform 0.3s ease;
+}
+.stat-box:hover { transform: translateY(-5px); }
+</style>
+
+{% block extra_js %}
+<script>
+const COLORS = ['#6366f1','#d946ef','#10b981','#f59e0b','#ef4444','#0ea5e9'];
+
+{% if current_user.role == 'student' and students %}
+// ── Student Growth Chart ──
+const growthCtx = document.getElementById('studentGrowthChart')?.getContext('2d');
+if(growthCtx){
+  new Chart(growthCtx,{
+    type:'line',
+    data:{
+      labels: {{ trend_labels|tojson }},
+      datasets:[{label:'Avg Score',data:{{ trend_values|tojson }},borderColor:'#6366f1',backgroundColor:'rgba(99,102,241,0.1)',fill:true,tension:0.4,borderWidth:4,pointRadius:6,pointBackgroundColor:'#fff',pointBorderColor:'#6366f1',pointBorderWidth:3}]
+    },
+    options:{responsive:true,maintainAspectRatio:false,plugins:{legend:{display:false}},scales:{y:{suggestedMin:40,suggestedMax:100,grid:{borderDash:[5,5]}},x:{grid:{display:false}}}}
+  });
+}
+
+// ── Internal vs External Donut ──
+const donutCtx = document.getElementById('intExtDonut')?.getContext('2d');
+if(donutCtx){
+  new Chart(donutCtx,{
+    type:'doughnut',
+    data:{labels:['Internal','External'],datasets:[{data:[{{ student_preview.internal if student_preview else 0 }},{{ student_preview.external if student_preview else 0 }}],backgroundColor:['#6366f1','#d946ef'],borderWidth:0,hoverOffset:12}]},
+    options:{responsive:true,maintainAspectRatio:false,cutout:'74%',plugins:{legend:{position:'bottom',labels:{padding:16,usePointStyle:true}}}}
+  });
+}
+{% endif %}
+
+{% if current_user.role == 'faculty' %}
+// ── Faculty Grade Doughnut ──
+const facultyGradeCtx = document.getElementById('facultyGradeChart')?.getContext('2d');
+if(facultyGradeCtx){
+  const gd = {{ faculty_grade_dist|tojson }};
+  new Chart(facultyGradeCtx,{
+    type:'doughnut',
+    data:{labels:Object.keys(gd),datasets:[{data:Object.values(gd),backgroundColor:COLORS,borderWidth:0,hoverOffset:12}]},
+    options:{responsive:true,maintainAspectRatio:false,cutout:'65%',plugins:{legend:{position:'bottom',labels:{padding:16,usePointStyle:true,font:{weight:'600'}}}}}
+  });
+}
+
+// ── Internal vs External Bar ──
+const intExtCtx = document.getElementById('facultyIntExtChart')?.getContext('2d');
+if(intExtCtx){
+  new Chart(intExtCtx,{
+    type:'bar',
+    data:{labels:['Class Internal Avg','Class External Avg'],datasets:[{label:'Average',data:[{{ class_internal }},{{ class_external }}],backgroundColor:['rgba(99,102,241,0.8)','rgba(217,70,239,0.8)'],borderRadius:12,barThickness:60}]},
+    options:{responsive:true,maintainAspectRatio:false,plugins:{legend:{display:false}},scales:{y:{beginAtZero:true,max:100,grid:{borderDash:[5,5]}},x:{grid:{display:false}}}}
+  });
+}
+
+{% if selected_student and student_preview and student_preview.subject_data %}
+// ── Selected Student Subject Bar (Tab 2) ──
+const studSubCtx = document.getElementById('studentSubjectChart')?.getContext('2d');
+if(studSubCtx){
+  const sd = {{ student_preview.subject_data|tojson }};
+  new Chart(studSubCtx,{
+    type:'bar',
+    data:{
+      labels:sd.map(s=>s.code),
+      datasets:[{label:'Total',data:sd.map(s=>s.total||0),backgroundColor:'rgba(99,102,241,0.75)',borderRadius:10,barThickness:32}]
+    },
+    options:{responsive:true,maintainAspectRatio:false,plugins:{legend:{display:false}},scales:{y:{beginAtZero:true,suggestedMax:100},x:{grid:{display:false}}}}
+  });
+}
+{% endif %}
+
+{% if selected_course and course_preview %}
+// ── Subject Grade Bar (Tab 3) ──
+const sgCtx = document.getElementById('subjectGradeChart')?.getContext('2d');
+if(sgCtx){
+  const gb = {{ course_preview.grade_breakdown|tojson }};
+  new Chart(sgCtx,{
+    type:'bar',
+    data:{labels:Object.keys(gb),datasets:[{data:Object.values(gb),backgroundColor:COLORS,borderRadius:10,barThickness:40}]},
+    options:{responsive:true,maintainAspectRatio:false,plugins:{legend:{display:false}},scales:{y:{beginAtZero:true,ticks:{stepSize:1}},x:{grid:{display:false}}}}
+  });
+}
+{% endif %}
+{% endif %}
+
+{% if current_user.role in ['admin','hod'] %}
+// ── Admin: College-Wide Grade Chart ──
+const adminGradeCtx = document.getElementById('adminGradeChart')?.getContext('2d');
+if(adminGradeCtx){
+  const gd = {{ college_grade_dist|tojson if college_grade_dist is defined else '{"A+":0,"A":0,"B+":0,"B":0,"C":0,"F":0}' }};
+  new Chart(adminGradeCtx,{
+    type:'doughnut',
+    data:{labels:Object.keys(gd),datasets:[{data:Object.values(gd),backgroundColor:COLORS,borderWidth:0,hoverOffset:12}]},
+    options:{responsive:true,maintainAspectRatio:false,cutout:'65%',plugins:{legend:{position:'bottom',labels:{padding:16,usePointStyle:true}}}}
+  });
+}
+
+// ── Admin: Subjects average bar ──
+const adminSubCtx = document.getElementById('adminSubjectBar')?.getContext('2d');
+if(adminSubCtx){
+  // Build course averages on the fly from courses list
+  const courseData = [
+    {% for c in courses[:12] %}
+    {% set c_totals = [] %}
+    {% for r in c.results if r.examination_type == 'internal' and r.academic_total %}{% set _ = c_totals.append(r.academic_total) %}{% endfor %}
+    {label:'{{ c.course_code }}', avg: {{ (c_totals|sum / c_totals|length)|round(1) if c_totals else 0 }} },
+    {% endfor %}
+  ];
+  new Chart(adminSubCtx,{
+    type:'bar',
+    data:{
+      labels:courseData.map(d=>d.label),
+      datasets:[{label:'Avg Marks',data:courseData.map(d=>d.avg),backgroundColor:'rgba(99,102,241,0.75)',borderRadius:10,barThickness:28}]
+    },
+    options:{responsive:true,maintainAspectRatio:false,plugins:{legend:{display:false}},scales:{y:{beginAtZero:true,suggestedMax:100},x:{grid:{display:false}}}}
+  });
+}
+
+{% if selected_student and student_preview and student_preview.subject_data %}
+const adminStudCtx = document.getElementById('adminStudentChart')?.getContext('2d');
+if(adminStudCtx){
+  const sd = {{ student_preview.subject_data|tojson }};
+  new Chart(adminStudCtx,{type:'bar',data:{labels:sd.map(s=>s.code),datasets:[{label:'Score',data:sd.map(s=>s.total||0),backgroundColor:'rgba(99,102,241,0.8)',borderRadius:10,barThickness:32}]},options:{responsive:true,maintainAspectRatio:false,plugins:{legend:{display:false}},scales:{y:{beginAtZero:true,suggestedMax:100},x:{grid:{display:false}}}}});
+}
+{% endif %}
+
+{% if selected_course and course_preview %}
+const adminCourseCtx = document.getElementById('adminCourseGradeChart')?.getContext('2d');
+if(adminCourseCtx){
+  const gb = {{ course_preview.grade_breakdown|tojson }};
+  new Chart(adminCourseCtx,{type:'bar',data:{labels:Object.keys(gb),datasets:[{data:Object.values(gb),backgroundColor:COLORS,borderRadius:10,barThickness:50}]},options:{responsive:true,maintainAspectRatio:false,plugins:{legend:{display:false}},scales:{y:{beginAtZero:true,ticks:{stepSize:1}},x:{grid:{display:false}}}}});
+}
+{% endif %}
+{% endif %}
+
+// ── Restore active tab on page reload ──
+const tabParam = new URLSearchParams(window.location.search).get('tab');
+if(tabParam){
+  const tabMap={'student':'#tabStudentSearch,#tabAdminStudent','subject':'#tabSubjectDeep,#tabAdminSubject'};
+  const selectors = tabMap[tabParam]?.split(',') || [];
+  selectors.forEach(sel=>{
+    const el = document.querySelector(sel);
+    if(el){ const bs = new bootstrap.Tab(document.querySelector(`[href="${sel}"]`) || document.querySelector(`[data-bs-target="${sel}"]`)); if(bs) bs.show(); }
+  });
+}
+</script>
+{% endblock %}
+{% endblock %}

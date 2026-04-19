@@ -71,7 +71,11 @@ class InternalExamForm(FlaskForm):
         DataRequired(),
         NumberRange(min=0, max=10)
     ])
-    mid_term_marks = FloatField('Mid Term Marks (out of 20)', validators=[
+    mid_term_marks_1 = FloatField('Internal Examination 1 (out of 20)', validators=[
+        DataRequired(),
+        NumberRange(min=0, max=20)
+    ])
+    mid_term_marks_2 = FloatField('Internal Examination 2 (out of 20)', validators=[
         DataRequired(),
         NumberRange(min=0, max=20)
     ])
@@ -79,8 +83,14 @@ class InternalExamForm(FlaskForm):
         DataRequired(),
         NumberRange(min=0, max=10)
     ])
+    practical_file_marks = FloatField('Practical File Marks (out of 10)', validators=[
+        NumberRange(min=0, max=10)
+    ])
+    internal_practical_marks = FloatField('Internal Practical Exam (out of 20)', validators=[
+        NumberRange(min=0, max=20)
+    ])
     remarks = TextAreaField('Remarks', validators=[Length(max=500)])
-    submit = SubmitField('Save Internal Exam')
+    submit = SubmitField('Save Internal Marks')
 
 
 class ExternalExamForm(FlaskForm):

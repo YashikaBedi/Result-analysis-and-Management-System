@@ -1,98 +1,319 @@
 {% extends "base.html" %}
 
-{% block title %}Student Analytics - Exam Management System{% endblock %}
+{% block title %}{{ student.user.full_name }} — Personal Performance Analysis{% endblock %}
 
 {% block content %}
-<div class="py-4">
-    <h1 class="mb-4">
-        <i class="bi bi-graph-up"></i> Analytics - {{ student.user.full_name }}
-    </h1>
-    
-    <div class="row mb-4">
-        <div class="col-md-3 mb-3">
-            <div class="card text-center">
-                <div class="card-body">
-                    <h5 class="card-title text-muted">GPA</h5>
-                    <h2 class="text-primary">{{ gpa }}</h2>
+<div class="py-4 animate-up">
+    <!-- Student Header Section -->
+    <div class="card border-0 mb-4 overflow-hidden" style="border-radius: 30px; background: linear-gradient(135deg, hsla(239, 84%, 67%, 0.1), hsla(295, 85%, 60%, 0.05)); border: 1px solid var(--zinc-100);">
+        <div class="card-body p-5">
+            <div class="row align-items-center">
+                <div class="col-auto">
+                    <div class="logo-circle-large" style="width: 100px; height: 100px; font-size: 3rem; background: var(--primary); color: white; border: 4px solid white; box-shadow: var(--shadow-soft);">
+                        {{ student.user.full_name[0].upper() }}
+                    </div>
                 </div>
-            </div>
-        </div>
-        <div class="col-md-3 mb-3">
-            <div class="card text-center">
-                <div class="card-body">
-                    <h5 class="card-title text-muted">Average Score</h5>
-                    <h2 class="text-info">{{ stats.average_marks if stats else 0 }}/100</h2>
+                <div class="col ms-md-4 mt-4 mt-md-0">
+                    <div class="badge-soft badge-soft-indigo mb-2">Student Performance Profile</div>
+                    <h1 class="display-5 fw-800 mb-1">{{ student.user.full_name }}</h1>
+                    <div class="d-flex flex-wrap gap-3 mt-2">
+                        <span class="text-muted"><i class="bi bi-person-vcard text-primary me-1"></i> Roll: <strong>{{ student.registration_number }}</strong></span>
+                        <span class="text-muted"><i class="bi bi-building text-primary me-1"></i> {{ student.department.name }}</span>
+                        <span class="text-muted"><i class="bi bi-stack text-primary me-1"></i> Section {{ student.section }}</span>
+                        <span class="text-muted"><i class="bi bi-envelope text-primary me-1"></i> {{ student.user.email }}</span>
+                    </div>
                 </div>
-            </div>
-        </div>
-        <div class="col-md-3 mb-3">
-            <div class="card text-center">
-                <div class="card-body">
-                    <h5 class="card-title text-muted">Pass Rate</h5>
-                    <h2 class="text-success">
-                        {% if stats and stats.total_courses > 0 %}
-                            {{ (stats.passed_courses / stats.total_courses * 100)|int }}%
-                        {% else %}
-                            -
-                        {% endif %}
-                    </h2>
-                </div>
-            </div>
-        </div>
-        <div class="col-md-3 mb-3">
-            <div class="card text-center">
-                <div class="card-body">
-                    <h5 class="card-title text-muted">Placement Prep</h5>
-                    <h2 class="text-warning">{{ stats.placement_average if stats else 0 }}/100</h2>
+                <div class="col-lg-2 text-center mt-4 mt-lg-0">
+                    <div class="glass-panel p-3 border-0 bg-white shadow-sm">
+                        <div class="display-5 fw-800 text-primary mb-0">{{ gpa }}</div>
+                        <div class="extra-small text-uppercase tracking-widest text-muted fw-bold">Cumulative GPA</div>
+                    </div>
                 </div>
             </div>
         </div>
     </div>
-    
-    <div class="card">
-        <div class="card-header bg-dark text-white">
-            <i class="bi bi-table"></i> Detailed Results
+
+    <!-- Quick Stats Row -->
+    <div class="row g-4 mb-5">
+        {% for label, val, color_class in [
+            ('Courses Completed', stats.total_courses, 'badge-soft-indigo'),
+            ('Passed Subjects', stats.passed_courses, 'badge-soft-emerald'),
+            ('Pending/Backlog', stats.failed_courses, 'badge-soft-rose'),
+            ('Avg. Performance', (stats.average_marks|default(0)|round(1)) ~ '%', 'badge-soft-amber')
+        ] %}
+        <div class="col-6 col-md-3">
+            <div class="stat-box h-100 border-0 shadow-sm text-center">
+                <div class="stat-number {{ color_class }} d-inline-block px-3 py-1 rounded-pill mb-2" style="font-size: 1.5rem;">{{ val }}</div>
+                <div class="stat-label">{{ label }}</div>
+            </div>
         </div>
-        <div class="table-responsive">
-            <table class="table mb-0">
-                <thead>
-                    <tr>
-                        <th>Course Code</th>
-                        <th>Internal</th>
-                        <th>External</th>
-                        <th>Total</th>
-                        <th>Grade</th>
-                        <th>Status</th>
-                    </tr>
-                </thead>
-                <tbody>
-                    {% if results %}
-                        {% for result in results %}
-                        {% if result.examination_type == 'internal' %}
-                        <tr>
-                            <td>{{ result.course.course_code if result.course else 'N/A' }}</td>
-                            <td>{{ result.internal_total }}</td>
-                            <td>{{ result.external_marks }}</td>
-                            <td><strong>{{ result.academic_total }}</strong></td>
-                            <td><span class="badge bg-info">{{ result.grade }}</span></td>
-                            <td>
-                                {% if result.pass_fail == 'Pass' %}
-                                    <span class="badge bg-success">PASS</span>
-                                {% else %}
-                                    <span class="badge bg-danger">FAIL</span>
-                                {% endif %}
-                            </td>
-                        </tr>
-                        {% endif %}
-                        {% endfor %}
-                    {% else %}
-                        <tr>
-                            <td colspan="6" class="text-center text-muted py-4">No results available</td>
-                        </tr>
-                    {% endif %}
-                </tbody>
-            </table>
+        {% endfor %}
+    </div>
+
+    <!-- Analytics Section 1: Growth & Comparison -->
+    <div class="row g-4 mb-5">
+        <!-- Growth Trend -->
+        <div class="col-lg-7">
+            <div class="card h-100 border-0 shadow-sm">
+                <div class="card-header bg-white border-0 pt-4 px-4 d-flex justify-content-between align-items-center">
+                    <h5 class="fw-800 mb-0"><i class="bi bi-graph-up-arrow text-primary me-2"></i> Historical Performance Trend</h5>
+                    <span class="badge bg-light text-dark extra-small">Semester wise Avg</span>
+                </div>
+                <div class="card-body p-4">
+                    <div style="height: 350px;">
+                        <canvas id="growthChart"></canvas>
+                    </div>
+                </div>
+            </div>
         </div>
+        
+        <!-- Internal vs External Bifurcation -->
+        <div class="col-lg-5">
+            <div class="card h-100 border-0 shadow-sm">
+                <div class="card-header bg-white border-0 pt-4 px-4">
+                    <h5 class="fw-800 mb-0"><i class="bi bi-pie-chart-fill text-secondary me-2"></i> Marks Distribution</h5>
+                </div>
+                <div class="card-body p-4">
+                    <div style="height: 350px;">
+                        <canvas id="distributionChart"></canvas>
+                    </div>
+                    <div class="row text-center mt-3 g-2">
+                        <div class="col-6">
+                            <div class="p-2 rounded-3 bg-light">
+                                <div class="small text-muted">Internal Avg</div>
+                                <div class="fw-bold text-primary">{{ subject_data|map(attribute='internal_total')|list|sum / (subject_data|length or 1)|round(1) }}</div>
+                            </div>
+                        </div>
+                        <div class="col-6">
+                            <div class="p-2 rounded-3 bg-light">
+                                <div class="small text-muted">External Avg</div>
+                                <div class="fw-bold text-secondary">{{ subject_data|map(attribute='external')|list|sum / (subject_data|length or 1)|round(1) }}</div>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <!-- Analytics Section 2: Subject Breakdown -->
+    <div class="row g-4 mb-5">
+        <div class="col-12">
+            <div class="card border-0 shadow-sm">
+                <div class="card-header bg-white border-0 pt-4 px-4">
+                    <h5 class="fw-800 mb-0"><i class="bi bi-border-all text-primary me-2"></i> Detailed Result Breakdown</h5>
+                </div>
+                <div class="card-body p-0">
+                    <div class="table-responsive">
+                        <table class="table table-premium mb-0">
+                            <thead class="bg-light">
+                                <tr>
+                                    <th class="ps-4">Subject</th>
+                                    <th class="text-center">CIE (1/2/3)</th>
+                                    <th class="text-center">IE (1/2)</th>
+                                    <th class="text-center">Assign/Prac</th>
+                                    <th class="text-center">Internal</th>
+                                    <th class="text-center">External</th>
+                                    <th class="text-center">Total</th>
+                                    <th class="text-center">Grade</th>
+                                    <th class="pe-4 text-center">Status</th>
+                                </tr>
+                            </thead>
+                            <tbody>
+                                {% for sub in subject_data %}
+                                <tr>
+                                    <td class="ps-4">
+                                        <div class="fw-bold">{{ sub.code }}</div>
+                                        <div class="extra-small text-muted">{{ sub.subject }}</div>
+                                    </td>
+                                    <td class="text-center">
+                                        <div class="small fw-600">{{ sub.cie_1 }}/{{ sub.cie_2 }}/{{ sub.cie_3 }}</div>
+                                        <div class="progress mt-1 mx-auto" style="height: 4px; width: 60px;">
+                                            <div class="progress-bar bg-info" style="width: {{ (sub.cie_1 + sub.cie_2 + sub.cie_3) / 0.6 }}%"></div>
+                                        </div>
+                                    </td>
+                                    <td class="text-center">
+                                        <div class="small fw-600">{{ sub.ie_1 }}/{{ sub.ie_2 }}</div>
+                                    </td>
+                                    <td class="text-center">
+                                        <div class="small fw-600">{{ sub.assignment }} / {{ sub.practical_file + sub.practical_internal }}</div>
+                                    </td>
+                                    <td class="text-center">
+                                        <span class="badge bg-primary bg-opacity-10 text-primary fw-bold">{{ sub.internal_total|round(1) }}</span>
+                                    </td>
+                                    <td class="text-center fw-bold text-secondary">{{ sub.external }}</td>
+                                    <td class="text-center">
+                                        <div class="fw-800 fs-5 text-dark">{{ sub.total|round(1) }}</div>
+                                    </td>
+                                    <td class="text-center">
+                                        <span class="badge-soft {% if sub.grade == 'A+' %}badge-soft-indigo{% elif sub.grade == 'F' %}badge-soft-rose{% else %}badge-soft-amber{% endif %}">
+                                            {{ sub.grade or 'N/A' }}
+                                        </span>
+                                    </td>
+                                    <td class="pe-4 text-center">
+                                        {% if sub.status == 'Pass' %}
+                                            <i class="bi bi-check-circle-fill text-success fs-5"></i>
+                                        {% else %}
+                                            <i class="bi bi-x-circle-fill text-danger fs-5"></i>
+                                        {% endif %}
+                                    </td>
+                                </tr>
+                                {% endfor %}
+                            </tbody>
+                        </table>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <!-- Placement Preparedness -->
+    {% if placement_data %}
+    <div class="row g-4 mb-5">
+        <div class="col-lg-12">
+            <div class="card border-0 shadow-sm" style="border-radius: 24px; border-left: 8px solid hsla(345, 90%, 60%, 1) !important;">
+                <div class="card-header bg-white border-0 pt-4 px-4">
+                    <h5 class="fw-800 mb-0"><i class="bi bi-bullseye text-accent me-2"></i> Placement Preparation Metric</h5>
+                </div>
+                <div class="card-body p-4">
+                    <div class="row align-items-center">
+                        <div class="col-md-5">
+                            <canvas id="placementRadar" style="max-height: 350px;"></canvas>
+                        </div>
+                        <div class="col-md-7">
+                            <div class="row g-3">
+                                {% for skill, val in [('DSA Mock', placement_data.dsa), ('OOP & Java', placement_data.oops), ('DBMS', placement_data.dbms), ('Prog. Skills', placement_data.programming), ('Aptitude', placement_data.aptitude), ('Interview', placement_data.interview)] %}
+                                <div class="col-6 col-md-4">
+                                    <div class="p-3 rounded-4 bg-light text-center">
+                                        <div class="fw-800 fs-3 text-accent">{{ val }}</div>
+                                        <div class="extra-small text-muted fw-bold text-uppercase">{{ skill }}</div>
+                                    </div>
+                                </div>
+                                {% endfor %}
+                            </div>
+                            <div class="mt-4 p-4 rounded-4" style="background: linear-gradient(135deg, hsla(345, 90%, 60%, 0.1), transparent);">
+                                <div class="d-flex justify-content-between align-items-center">
+                                    <div>
+                                        <h4 class="fw-800 mb-0 text-accent">Career Readiness Score</h4>
+                                        <p class="text-muted small mb-0">Composite preparedness based on mock evaluations.</p>
+                                    </div>
+                                    <div class="display-4 fw-800 text-accent">{{ placement_data.average|round(1) }}</div>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+    {% endif %}
+
+    <div class="text-center mt-4">
+        <a href="{{ url_for('analytics.analysis_hub') }}" class="btn btn-primary px-5 btn-lg shadow-lg">
+            <i class="bi bi-arrow-left me-2"></i> Return to Analysis Hub
+        </a>
     </div>
 </div>
+
+{% block extra_js %}
+<script>
+// Performance Trend Chart
+const growthCtx = document.getElementById('growthChart').getContext('2d');
+new Chart(growthCtx, {
+    type: 'line',
+    data: {
+        labels: {{ trend_labels | tojson }},
+        datasets: [{
+            label: 'Internal Avg',
+            data: {{ trend_internal | tojson }},
+            borderColor: '#6366f1',
+            backgroundColor: 'rgba(99, 102, 241, 0.1)',
+            fill: true,
+            tension: 0.4,
+            borderWidth: 4,
+            pointRadius: 6,
+            pointBackgroundColor: '#fff',
+            pointBorderColor: '#6366f1',
+            pointBorderWidth: 3
+        },
+        {
+            label: 'External Avg',
+            data: {{ trend_external | tojson }},
+            borderColor: '#10b981',
+            backgroundColor: 'rgba(16, 185, 129, 0.1)',
+            fill: true,
+            tension: 0.4,
+            borderWidth: 4,
+            pointRadius: 6,
+            pointBackgroundColor: '#fff',
+            pointBorderColor: '#10b981',
+            pointBorderWidth: 3
+        }]
+    },
+    options: {
+        responsive: true,
+        maintainAspectRatio: false,
+        plugins: { legend: { display: true, position: 'top' } },
+        scales: {
+            y: { beginAtZero: false, suggestedMin: 40, suggestedMax: 100, grid: { borderDash: [5, 5] } },
+            x: { grid: { display: false } }
+        }
+    }
+});
+
+// Internal vs External Bifurcation Chart (Aggregated)
+const distCtx = document.getElementById('distributionChart').getContext('2d');
+new Chart(distCtx, {
+    type: 'doughnut',
+    data: {
+        labels: ['Internals (CIE/IE)', 'External (Exams)'],
+        datasets: [{
+            data: [
+                {{ subject_data|map(attribute='internal_total')|list|sum / (subject_data|length or 1) }},
+                {{ subject_data|map(attribute='external')|list|sum / (subject_data|length or 1) }}
+            ],
+            backgroundColor: ['#6366f1', '#d946ef'],
+            hoverOffset: 15,
+            borderWidth: 0
+        }]
+    },
+    options: {
+        responsive: true,
+        maintainAspectRatio: false,
+        plugins: {
+            legend: { position: 'bottom', labels: { padding: 20, usePointStyle: true, font: { weight: '600' } } }
+        },
+        cutout: '75%'
+    }
+});
+
+// Placement Radar
+{% if placement_data %}
+const radarCtx = document.getElementById('placementRadar').getContext('2d');
+new Chart(radarCtx, {
+    type: 'radar',
+    data: {
+        labels: ['DSA', 'OOP', 'DBMS', 'Prog', 'Aptitude', 'Interview'],
+        datasets: [{
+            label: 'Scores',
+            data: [{{ placement_data.dsa }}, {{ placement_data.oops }}, {{ placement_data.dbms }}, {{ placement_data.programming }}, {{ placement_data.aptitude }}, {{ placement_data.interview }}],
+            backgroundColor: 'rgba(244, 63, 94, 0.2)',
+            borderColor: '#f43f5e',
+            borderWidth: 3,
+            pointRadius: 4,
+            pointBackgroundColor: '#f43f5e'
+        }]
+    },
+    options: {
+        responsive: true,
+        maintainAspectRatio: false,
+        scales: {
+            r: { min: 0, max: 100, ticks: { display: false }, grid: { circular: true } }
+        },
+        plugins: { legend: { display: false } }
+    }
+});
+{% endif %}
+</script>
+{% endblock %}
 {% endblock %}

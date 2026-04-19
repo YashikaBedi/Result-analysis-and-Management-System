@@ -7,7 +7,7 @@ from reportlab.lib.units import inch
 from reportlab.lib import colors
 import json
 from app import db
-from app.models import Result, Student, Course, User, AuditLog
+from app.models import Result, Student, Course, User
 from flask import request
 
 # Optional imports for analytics - will be available when pandas is installed
@@ -215,21 +215,8 @@ def export_results_to_pdf(student_id=None, course_id=None):
 
 
 def log_audit_action(user_id, action, table_name, record_id=None, old_values=None, new_values=None):
-    """Log user actions for audit trail"""
-    ip_address = request.remote_addr if request else None
-    
-    audit_log = AuditLog(
-        user_id=user_id,
-        action=action,
-        table_name=table_name,
-        record_id=record_id,
-        old_values=old_values,
-        new_values=new_values,
-        ip_address=ip_address
-    )
-    
-    db.session.add(audit_log)
-    db.session.commit()
+    """(Deprecated - AuditLog removed. Login history is logged separately.)"""
+    pass
 
 
 def search_results(query_string, filters=None):

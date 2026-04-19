@@ -1,0 +1,136 @@
+{% extends "base.html" %}
+
+{% block title %}Performance Report - {{ student.user.full_name }}{% endblock %}
+
+{% block content %}
+<div class="py-4 animate-up no-print">
+    <div class="d-flex justify-content-between align-items-center mb-4">
+        <div>
+            <h1 class="fw-800 mb-1">Academic Performance Report</h1>
+            <p class="text-muted small mb-0">Official student transcript and analytical summary.</p>
+        </div>
+        <button onclick="window.print()" class="btn btn-primary">
+            <i class="bi bi-printer me-2"></i> Print Report
+        </button>
+    </div>
+</div>
+
+<div class="report-document p-5 bg-white shadow-lg mx-auto" style="max-width: 900px; border-radius: 12px; position: relative;">
+    <!-- Logo/Header -->
+    <div class="text-center mb-5 border-bottom pb-4">
+        <div class="logo-circle-large mx-auto mb-3" style="width: 70px; height: 70px;">
+            <i class="bi bi-mortarboard-fill"></i>
+        </div>
+        <h2 class="fw-800 text-uppercase tracking-widest mb-1">JIMS SEC-5 Result Analytics</h2>
+        <p class="text-muted small">Department of Computer Applications</p>
+    </div>
+
+    <!-- Student Detail Grid -->
+    <div class="row g-4 mb-5">
+        <div class="col-md-6">
+            <div class="p-3 border-start border-primary border-4 bg-zinc-50">
+                <div class="small fw-bold text-muted text-uppercase">Student Name</div>
+                <div class="h5 fw-800">{{ student.user.full_name }}</div>
+            </div>
+        </div>
+        <div class="col-md-6">
+            <div class="p-3 border-start border-primary border-4 bg-zinc-50">
+                <div class="small fw-bold text-muted text-uppercase">Registration Number</div>
+                <div class="h5 fw-800">{{ student.registration_number }}</div>
+            </div>
+        </div>
+        <div class="col-md-4">
+            <div class="p-3 bg-zinc-50 rounded-3">
+                <div class="small text-muted">Department</div>
+                <div class="fw-bold">{{ student.department.name }}</div>
+            </div>
+        </div>
+        <div class="col-md-4">
+            <div class="p-3 bg-zinc-50 rounded-3">
+                <div class="small text-muted">Academic Year</div>
+                <div class="fw-bold">{{ student.admission_year }} - {{ student.admission_year + 2 }}</div>
+            </div>
+        </div>
+        <div class="col-md-4">
+            <div class="p-3 bg-zinc-50 rounded-3">
+                <div class="small text-muted">Cumulative GPA</div>
+                <div class="fw-bold text-primary">{{ gpa }} / 4.0</div>
+            </div>
+        </div>
+    </div>
+
+    <!-- Academic Table -->
+    {% for sem_num in sorted_sems %}
+    <div class="mb-5">
+        <h5 class="fw-800 mb-3 text-zinc-700 border-bottom pb-2">Semester {{ sem_num }} Summary</h5>
+        <div class="table-responsive">
+            <table class="table table-bordered align-middle">
+                <thead class="bg-zinc-50">
+                    <tr class="text-center small fw-bold">
+                        <th class="text-start">Subject Code & Name</th>
+                        <th>Internal (40)</th>
+                        <th>External (60)</th>
+                        <th>Total (100)</th>
+                        <th>Grade</th>
+                        <th>Status</th>
+                    </tr>
+                </thead>
+                <tbody>
+                    {% for r in semesters[sem_num] %}
+                    <tr class="text-center">
+                        <td class="text-start">
+                            <div class="fw-bold small">{{ r.course.course_code }}</div>
+                            <div class="text-muted extra-small">{{ r.course.course_name }}</div>
+                        </td>
+                        <td class="fw-600">{{ r.internal_total }}</td>
+                        <td>{{ r.external_marks or 0 }}</td>
+                        <td class="fw-800">{{ r.academic_total }}</td>
+                        <td>
+                            <span class="badge {% if r.grade == 'F' %}bg-danger{% else %}bg-zinc-100 text-zinc-900{% endif %}">
+                                {{ r.grade }}
+                            </span>
+                        </td>
+                        <td>
+                            <span class="text-{{ 'success' if r.pass_fail == 'Pass' else 'danger' }} fw-bold small">
+                                {{ r.pass_fail }}
+                            </span>
+                        </td>
+                    </tr>
+                    {% endfor %}
+                </tbody>
+            </table>
+        </div>
+    </div>
+    {% endfor %}
+
+    <!-- Footer Summary -->
+    <div class="mt-5 pt-4 border-top">
+        <div class="row g-4 align-items-center">
+            <div class="col-md-8">
+                <div class="p-4 bg-zinc-50 rounded-4">
+                    <h6 class="fw-800 mb-3">Institutional Remarks</h6>
+                    <p class="text-muted small mb-0">Total Credits Earned: {{ stats.passed_courses * 3 }} credits. The student has maintained an aggregate percentage of {{ stats.average_marks }}% across verified semesters.</p>
+                </div>
+            </div>
+            <div class="col-md-4 text-center">
+                <div class="mb-4">
+                    <div style="height: 60px; border-bottom: 1px dashed #cbd5e1; width: 150px; margin: 0 auto;"></div>
+                    <div class="extra-small text-muted mt-2">Registrar Signature</div>
+                </div>
+                <div class="extra-small text-zinc-400">Date of Issue: {{ today.strftime('%B %d, %Y') if today else 'April 20, 2026' }}</div>
+            </div>
+        </div>
+    </div>
+</div>
+
+<style>
+@media print {
+    .no-print, .modern-navbar, .modern-sidebar { display: none !important; }
+    .modern-main { margin-left: 0 !important; padding: 0 !important; width: 100% !important; }
+    body { background: white !important; }
+    .report-document { box-shadow: none !important; border: none !important; padding: 0 !important; max-width: 100% !important; }
+}
+.report-document table th, .report-document table td { font-size: 0.85rem; padding: 0.75rem; }
+.extra-small { font-size: 0.7rem; }
+</style>
+{% endblock %}

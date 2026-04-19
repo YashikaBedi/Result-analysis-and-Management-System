@@ -24,5 +24,5 @@ if __name__ == '__main__':
     with app.app_context():
         db.create_all()
     
-    # Run the application
-    app.run(debug=True, host='0.0.0.0', port=5000)
+    # Run the application without the reloader for a stable local startup.
+    app.run(debug=True, use_reloader=False, host='0.0.0.0', port=5000)

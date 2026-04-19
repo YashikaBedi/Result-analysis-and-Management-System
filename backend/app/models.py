@@ -9,7 +9,6 @@ class UserRole(Enum):
     ADMIN = 'admin'  # College administrator
     FACULTY = 'faculty'  # Teaching faculty/examiner
     STUDENT = 'student'  # Student
-    HOD = 'hod'  # Head of Department
 
 
 class User(UserMixin, db.Model):
@@ -23,6 +22,7 @@ class User(UserMixin, db.Model):
     full_name = db.Column(db.String(120), nullable=False)
     role = db.Column(db.String(20), nullable=False, default=UserRole.STUDENT.value)
     is_active = db.Column(db.Boolean, default=True)
+    password_reset_requested = db.Column(db.Boolean, default=False)
     created_at = db.Column(db.DateTime, default=datetime.utcnow)
     updated_at = db.Column(db.DateTime, default=datetime.utcnow, onupdate=datetime.utcnow)
     
@@ -56,7 +56,6 @@ class Department(db.Model):
     id = db.Column(db.Integer, primary_key=True)
     name = db.Column(db.String(100), unique=True, nullable=False)  # MCA, BBA, BCA, BCOM, MBA
     code = db.Column(db.String(10), unique=True, nullable=False)  # MCA, BBA, etc.
-    hod_id = db.Column(db.Integer, db.ForeignKey('users.id'))
     created_at = db.Column(db.DateTime, default=datetime.utcnow)
     
     # Relationships
@@ -94,6 +93,7 @@ class Course(db.Model):
     course_code = db.Column(db.String(20), nullable=False)  # CS101, DBMS201, etc.
     course_name = db.Column(db.String(150), nullable=False)
     faculty_id = db.Column(db.Integer, db.ForeignKey('users.id'))
+    section = db.Column(db.String(5), default='A')  # A, B
     credits = db.Column(db.Integer, default=4)
     created_at = db.Column(db.DateTime, default=datetime.utcnow)
     
@@ -101,10 +101,10 @@ class Course(db.Model):
     enrollments = db.relationship('Enrollment', backref='course', lazy=True, cascade='all, delete-orphan')
     results = db.relationship('Result', backref='course', lazy=True, cascade='all, delete-orphan')
     
-    __table_args__ = (db.UniqueConstraint('program_id', 'course_code', name='_course_uc'),)
+    __table_args__ = (db.UniqueConstraint('program_id', 'course_code', 'section', name='_course_uc'),)
     
     def __repr__(self):
-        return f'<Course {self.course_code}>'
+        return f'<Course {self.course_code} Sec {self.section}>'
 
 
 class Student(db.Model):
@@ -115,11 +115,12 @@ class Student(db.Model):
     user_id = db.Column(db.Integer, db.ForeignKey('users.id'), unique=True, nullable=False)
     registration_number = db.Column(db.String(20), unique=True, nullable=False, index=True)
     department_id = db.Column(db.Integer, db.ForeignKey('departments.id'), nullable=False)
+    section = db.Column(db.String(5), default='A')  # A, B
     admission_year = db.Column(db.Integer, nullable=False)
     created_at = db.Column(db.DateTime, default=datetime.utcnow)
     
     # Relationships
-    user = db.relationship('User', backref='student_profile')
+    user = db.relationship('User', backref=db.backref('student_profile', uselist=False))
     department = db.relationship('Department')
     enrollments = db.relationship('Enrollment', backref='student', lazy=True, cascade='all, delete-orphan')
     results = db.relationship('Result', backref='student', lazy=True, cascade='all, delete-orphan')
@@ -157,25 +158,31 @@ class Result(db.Model):
     
     id = db.Column(db.Integer, primary_key=True)
     student_id = db.Column(db.Integer, db.ForeignKey('students.id'), nullable=False, index=True)
-    course_id = db.Column(db.Integer, db.ForeignKey('courses.id'), nullable=False)
+    course_id = db.Column(db.Integer, db.ForeignKey('courses.id'), nullable=True) # Optional for Placement
     examination_type = db.Column(db.String(20), nullable=False)  # internal, external, placement
     
-    # Internal Exam: CIE (Continuous Internal Evaluation)
-    cie_assessment_1 = db.Column(db.Float, default=0)  # Out of 10
-    cie_assessment_2 = db.Column(db.Float, default=0)  # Out of 10
-    cie_assessment_3 = db.Column(db.Float, default=0)  # Out of 10
-    mid_term_marks = db.Column(db.Float, default=0)  # Out of 20
-    assignment_marks = db.Column(db.Float, default=0)  # Out of variable
-    internal_total = db.Column(db.Float, default=0)  # Out of 40
+    # --- Internal Assessments ---
+    cie_1 = db.Column(db.Float, default=0)
+    cie_2 = db.Column(db.Float, default=0)
+    cie_3 = db.Column(db.Float, default=0)
+    internal_exam_1 = db.Column(db.Float, default=0)
+    internal_exam_2 = db.Column(db.Float, default=0)
+    assignment_marks = db.Column(db.Float, default=0)
     
-    # External Exam
-    external_marks = db.Column(db.Float, default=0)  # Out of 60
+    # --- Practical Assessments ---
+    practical_file_marks = db.Column(db.Float, default=0)
+    internal_practical_marks = db.Column(db.Float, default=0)
     
-    # Academic Total (Internal + External) - Out of 100
+    internal_total = db.Column(db.Float, default=0)  
+    
+    # --- External Exam ---
+    external_marks = db.Column(db.Float, default=0) 
+    
+    # --- Academic Totals ---
     academic_total = db.Column(db.Float, default=0)
-    pass_fail = db.Column(db.String(10), default='Not Graded')  # Pass, Fail, Not Graded
+    pass_fail = db.Column(db.String(10), default='Not Graded')
     
-    # Placement Preparation
+    # --- Placement Preparation ---
     dsa_mock_exam = db.Column(db.Float, default=0)
     oops_mock_exam = db.Column(db.Float, default=0)
     dbms_mock_exam = db.Column(db.Float, default=0)
@@ -184,8 +191,7 @@ class Result(db.Model):
     interview_score = db.Column(db.Float, default=0)
     placement_average = db.Column(db.Float, default=0)
     
-    # Grade information
-    grade = db.Column(db.String(5), default='')  # A+, A, B+, B, C, D, F
+    grade = db.Column(db.String(5), default='')
     grade_point = db.Column(db.Float, default=0.0)
     
     # Metadata
@@ -199,18 +205,23 @@ class Result(db.Model):
     )
     
     def calculate_internal_total(self):
-        """Calculate internal marks total (out of 40)"""
-        # CIE: 3 assessments × 10 = 30 marks converted to out of 30
-        # Mid term: out of 20 (converted to out of 10)
-        # Assignment: out of 10
-        cie_total = (self.cie_assessment_1 + self.cie_assessment_2 + self.cie_assessment_3) / 3 * 10
-        self.internal_total = cie_total + (self.mid_term_marks / 2) + self.assignment_marks
+        """Calculate internal marks total (Max 40)"""
+        # CIEs: Avg of 3 (Max 10)
+        cie_score = (self.cie_1 + self.cie_2 + self.cie_3) / 3
+        # Internal Exams: Avg of 2 (Max 20)
+        exam_score = (self.internal_exam_1 + self.internal_exam_2) / 2
+        # Assignments/Practicals (Max 10)
+        other_score = min(10, self.assignment_marks + self.practical_file_marks + self.internal_practical_marks)
+        
+        self.internal_total = round(cie_score + exam_score + other_score, 1)
+        self.internal_total = min(40.0, self.internal_total)
         return self.internal_total
     
     def calculate_academic_total(self):
-        """Calculate total academic marks (internal + external out of 100)"""
-        self.academic_total = self.internal_total + self.external_marks
-        # Check pass/fail (need 40 marks out of 100)
+        """Calculate total academic marks (Max 100)"""
+        # Ensure external marks don't exceed 60
+        ext = min(60.0, self.external_marks or 0)
+        self.academic_total = self.internal_total + ext
         self.pass_fail = 'Pass' if self.academic_total >= 40 else 'Fail'
         return self.academic_total
     
@@ -225,51 +236,29 @@ class Result(db.Model):
     
     def assign_grade(self):
         """Assign grade based on academic total"""
-        if self.academic_total >= 90:
-            self.grade = 'A+'
-            self.grade_point = 4.0
-        elif self.academic_total >= 85:
-            self.grade = 'A'
-            self.grade_point = 3.7
-        elif self.academic_total >= 80:
-            self.grade = 'B+'
-            self.grade_point = 3.3
-        elif self.academic_total >= 75:
-            self.grade = 'B'
-            self.grade_point = 3.0
-        elif self.academic_total >= 70:
-            self.grade = 'C+'
-            self.grade_point = 2.7
-        elif self.academic_total >= 60:
-            self.grade = 'C'
-            self.grade_point = 2.0
-        elif self.academic_total >= 50:
-            self.grade = 'D'
-            self.grade_point = 1.0
-        else:
-            self.grade = 'F'
-            self.grade_point = 0.0
+        if self.academic_total >= 90: self.grade, self.grade_point = 'A+', 4.0
+        elif self.academic_total >= 85: self.grade, self.grade_point = 'A', 3.7
+        elif self.academic_total >= 80: self.grade, self.grade_point = 'B+', 3.3
+        elif self.academic_total >= 75: self.grade, self.grade_point = 'B', 3.0
+        elif self.academic_total >= 70: self.grade, self.grade_point = 'C+', 2.7
+        elif self.academic_total >= 60: self.grade, self.grade_point = 'C', 2.0
+        elif self.academic_total >= 50: self.grade, self.grade_point = 'D', 1.0
+        else: self.grade, self.grade_point = 'F', 0.0
     
     def __repr__(self):
         return f'<Result {self.student_id} - {self.course_id}>'
 
 
-class AuditLog(db.Model):
-    """Audit log for tracking changes"""
-    __tablename__ = 'audit_logs'
+class AcademicCalendar(db.Model):
+    """Academic calendar events and schedules"""
+    __tablename__ = 'academic_calendar'
     
     id = db.Column(db.Integer, primary_key=True)
-    user_id = db.Column(db.Integer, db.ForeignKey('users.id'), nullable=False)
-    action = db.Column(db.String(100), nullable=False)
-    table_name = db.Column(db.String(50), nullable=False)
-    record_id = db.Column(db.Integer)
-    old_values = db.Column(db.JSON)
-    new_values = db.Column(db.JSON)
-    timestamp = db.Column(db.DateTime, default=datetime.utcnow)
-    ip_address = db.Column(db.String(50))
-    
-    # Relationships
-    user = db.relationship('User', backref='audit_logs')
-    
-    def __repr__(self):
-        return f'<AuditLog {self.action} on {self.table_name}>'
+    title = db.Column(db.String(200), nullable=False)
+    event_type = db.Column(db.String(50), nullable=False) # Exam, Holiday, Workshop, Internal
+    description = db.Column(db.Text)
+    start_date = db.Column(db.DateTime, nullable=False)
+    end_date = db.Column(db.DateTime)
+    department_id = db.Column(db.Integer, db.ForeignKey('departments.id'))
+    created_by = db.Column(db.Integer, db.ForeignKey('users.id'))
+    created_at = db.Column(db.DateTime, default=datetime.utcnow)

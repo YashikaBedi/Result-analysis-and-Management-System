@@ -72,20 +72,28 @@
                                 {% else %}
                                     <span class="badge bg-danger">Inactive</span>
                                 {% endif %}
+                                {% if user.password_reset_requested %}
+                                    <span class="badge bg-warning text-dark"><i class="bi bi-key-fill"></i> Reset Requested</span>
+                                {% endif %}
                             </td>
                             <td>{{ user.created_at.strftime('%Y-%m-%d') }}</td>
                             <td>
-                                <form method="POST" action="{{ url_for('admin.toggle_user_active', user_id=user.id) }}" style="display:inline;">
-                                    {% if user.is_active %}
-                                        <button type="submit" class="btn btn-sm btn-warning" onclick="return confirm('Deactivate this user?')">
-                                            <i class="bi bi-lock"></i> Deactivate
-                                        </button>
-                                    {% else %}
-                                        <button type="submit" class="btn btn-sm btn-success" onclick="return confirm('Activate this user?')">
-                                            <i class="bi bi-unlock"></i> Activate
-                                        </button>
-                                    {% endif %}
-                                </form>
+                                <div class="d-flex gap-2">
+                                    <form method="POST" action="{{ url_for('admin.toggle_user_active', user_id=user.id) }}" style="display:inline;">
+                                        {% if user.is_active %}
+                                            <button type="submit" class="btn btn-sm btn-outline-warning" onclick="return confirm('Deactivate this user?')">
+                                                <i class="bi bi-lock"></i>
+                                            </button>
+                                        {% else %}
+                                            <button type="submit" class="btn btn-sm btn-outline-success" onclick="return confirm('Activate this user?')">
+                                                <i class="bi bi-unlock"></i>
+                                            </button>
+                                        {% endif %}
+                                    </form>
+                                    <a href="{{ url_for('auth.reset_password', user_id=user.id) }}" class="btn btn-sm btn-outline-primary" title="Reset Password">
+                                        <i class="bi bi-shield-lock"></i>
+                                    </a>
+                                </div>
                             </td>
                         </tr>
                         {% endfor %}

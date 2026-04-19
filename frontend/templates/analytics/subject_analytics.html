@@ -1,0 +1,259 @@
+{% extends "base.html" %}
+
+{% block title %}Subject Analytics — {{ course.course_name }}{% endblock %}
+
+{% block content %}
+<div class="py-4 animate-up">
+    <!-- Course Header -->
+    <div class="card border-0 mb-4 overflow-hidden" style="border-radius: 30px; background: linear-gradient(135deg, hsla(295, 85%, 60%, 0.1), hsla(239, 84%, 67%, 0.05)); border: 1px solid var(--zinc-100);">
+        <div class="card-body p-5">
+            <div class="row align-items-center">
+                <div class="col-auto">
+                    <div class="logo-circle-large" style="width: 100px; height: 100px; font-size: 3rem; background: var(--secondary); color: white; border: 4px solid white; box-shadow: var(--shadow-soft);">
+                        <i class="bi bi-journal-text"></i>
+                    </div>
+                </div>
+                <div class="col ms-md-4 mt-4 mt-md-0">
+                    <div class="badge-soft badge-soft-indigo mb-2">Subject Performance Analysis</div>
+                    <h1 class="display-5 fw-800 mb-1">{{ course.course_name }}</h1>
+                    <div class="d-flex flex-wrap gap-3 mt-2">
+                        <span class="text-muted"><i class="bi bi-hash text-secondary me-1"></i> Code: <strong>{{ course.course_code }}</strong></span>
+                        <span class="text-muted"><i class="bi bi-stack text-secondary me-1"></i> Section: <strong>{{ course.section }}</strong></span>
+                        <span class="text-muted"><i class="bi bi-person-workspace text-secondary me-1"></i> Faculty: <strong>{{ course.faculty.full_name if course.faculty else 'Not Assigned' }}</strong></span>
+                        <span class="text-muted"><i class="bi bi-calendar3 text-secondary me-1"></i> Semester: <strong>{{ course.program.semester if course.program else 'N/A' }}</strong></span>
+                    </div>
+                </div>
+                <div class="col-lg-2 text-center mt-4 mt-lg-0">
+                    <div class="glass-panel p-3 border-0 bg-white shadow-sm">
+                        <div class="display-5 fw-800 text-secondary mb-0">{{ analytics.average }}</div>
+                        <div class="extra-small text-uppercase tracking-widest text-muted fw-bold">Class Average</div>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <!-- Metric Cards -->
+    <div class="row g-4 mb-5">
+        {% for label, val, color_class, icon in [
+            ('Students Enrolled', analytics.total, 'badge-soft-indigo', 'bi-people'),
+            ('Highest Score', analytics.highest, 'badge-soft-emerald', 'bi-trophy'),
+            ('Lowest Score', analytics.lowest, 'badge-soft-rose', 'bi-graph-down'),
+            ('Pass Percentage', analytics.pass_rate ~ '%', 'badge-soft-amber', 'bi-check2-circle')
+        ] %}
+        <div class="col-6 col-md-3">
+            <div class="stat-box h-100 border-0 shadow-sm text-center">
+                <div class="stat-icon {{ color_class }} mx-auto mb-3" style="width: 48px; height: 48px;">
+                    <i class="bi {{ icon }}"></i>
+                </div>
+                <div class="stat-number mb-1" style="font-size: 1.5rem;">{{ val }}</div>
+                <div class="stat-label">{{ label }}</div>
+            </div>
+        </div>
+        {% endfor %}
+    </div>
+
+    <!-- Analytics Section 1: Distribution & Comparisons -->
+    <div class="row g-4 mb-5">
+        <!-- Grade Distribution -->
+        <div class="col-lg-6">
+            <div class="card h-100 border-0 shadow-sm">
+                <div class="card-header bg-white border-0 pt-4 px-4">
+                    <h5 class="fw-800 mb-0"><i class="bi bi-bar-chart-fill text-primary me-2"></i> Grade Distribution</h5>
+                </div>
+                <div class="card-body p-4">
+                    <div style="height: 300px;">
+                        <canvas id="gradeDistChart"></canvas>
+                    </div>
+                </div>
+            </div>
+        </div>
+        
+        <!-- Section Comparison (A vs B) -->
+        <div class="col-lg-6">
+            <div class="card h-100 border-0 shadow-sm">
+                <div class="card-header bg-white border-0 pt-4 px-4 d-flex justify-content-between align-items-center">
+                    <h5 class="fw-800 mb-0"><i class="bi bi-intersect text-secondary me-2"></i> Section Comparison</h5>
+                    <span class="badge bg-light text-dark extra-small">A vs B Performance</span>
+                </div>
+                <div class="card-body p-4">
+                    {% if sibling_data %}
+                    <div class="row g-4 text-center mt-2">
+                        <div class="col-6">
+                            <div class="p-4 rounded-4 bg-primary bg-opacity-10 border-start border-4 border-primary">
+                                <div class="small fw-bold text-uppercase opacity-50 mb-2">Section {{ course.section }} (Current)</div>
+                                <div class="display-6 fw-800 text-primary">{{ analytics.average }}</div>
+                                <div class="extra-small fw-bold text-muted">Avg Marks</div>
+                                <div class="mt-2 small"><i class="bi bi-star-fill text-warning me-1"></i> {{ analytics.pass_rate }}% Pass</div>
+                            </div>
+                        </div>
+                        <div class="col-6">
+                            <div class="p-4 rounded-4 bg-secondary bg-opacity-10 border-start border-4 border-secondary">
+                                <div class="small fw-bold text-uppercase opacity-50 mb-2">Section {{ sibling_data.section }}</div>
+                                <div class="display-6 fw-800 text-secondary">{{ sibling_data.average }}</div>
+                                <div class="extra-small fw-bold text-muted">Avg Marks</div>
+                                <div class="mt-2 small"><i class="bi bi-star-fill text-warning me-1"></i> {{ sibling_data.pass_rate }}% Pass</div>
+                            </div>
+                        </div>
+                    </div>
+                    <div class="mt-4 pt-3 border-top">
+                        <p class="text-muted small mb-0 d-flex align-items-center gap-2">
+                            <i class="bi bi-info-circle"></i> 
+                            Performance Gap: 
+                            <span class="fw-bold {% if analytics.average >= sibling_data.average %}text-success{% else %}text-danger{% endif %}">
+                                {{ (analytics.average - sibling_data.average)|abs|round(1) }} marks
+                            </span>
+                        </p>
+                    </div>
+                    {% else %}
+                    <div class="text-center py-5">
+                        <i class="bi bi-diagram-2 fs-1 text-muted opacity-25"></i>
+                        <p class="text-muted mt-2">No comparison data available (Single Section course).</p>
+                    </div>
+                    {% endif %}
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <!-- Analytics Section 2: Component Averages & Top 10 -->
+    <div class="row g-4 mb-5">
+        <!-- CIE/Internal Component Averages -->
+        <div class="col-lg-5">
+            <div class="card h-100 border-0 shadow-sm">
+                <div class="card-header bg-white border-0 pt-4 px-4">
+                    <h5 class="fw-800 mb-0"><i class="bi bi-radar text-info me-2"></i> Component Mean Analysis</h5>
+                </div>
+                <div class="card-body p-4">
+                    <div style="height: 300px;">
+                        <canvas id="componentRadarChart"></canvas>
+                    </div>
+                </div>
+            </div>
+        </div>
+        
+        <!-- Toppers Hall of Fame -->
+        <div class="col-lg-7">
+            <div class="card border-0 shadow-sm overflow-hidden h-100" style="border-radius: 20px;">
+                <div class="card-header bg-white border-0 pt-4 px-4 d-flex justify-content-between align-items-center">
+                    <div>
+                        <h5 class="fw-800 mb-0 d-flex align-items-center gap-2">
+                            <i class="bi bi-stars text-warning fs-4"></i> Subject Hall of Fame
+                        </h5>
+                        <p class="text-muted extra-small mb-0">Elite performers for this course.</p>
+                    </div>
+                    <div class="badge-soft badge-soft-indigo">Top 10 Students</div>
+                </div>
+                <div class="card-body p-0">
+                    <div class="table-responsive">
+                        <table class="table table-hover align-middle mb-0">
+                            <thead class="bg-light border-bottom">
+                                <tr>
+                                    <th class="ps-4 py-3 extra-small fw-bold text-uppercase tracking-widest text-muted">Rank</th>
+                                    <th class="py-3 extra-small fw-bold text-uppercase tracking-widest text-muted">Roll No</th>
+                                    <th class="py-3 extra-small fw-bold text-uppercase tracking-widest text-muted">Student Name</th>
+                                    <th class="text-end pe-4 py-3 extra-small fw-bold text-uppercase tracking-widest text-muted">Marks</th>
+                                </tr>
+                            </thead>
+                            <tbody>
+                                {% for res in top_10 %}
+                                <tr {% if loop.index <= 3 %}class="table-light"{% endif %}>
+                                    <td class="ps-4">
+                                        {% if loop.index == 1 %}
+                                            <span class="badge bg-warning text-dark"><i class="bi bi-trophy-fill"></i> #1</span>
+                                        {% elif loop.index == 2 %}
+                                            <span class="badge bg-secondary"><i class="bi bi-award-fill"></i> #2</span>
+                                        {% elif loop.index == 3 %}
+                                            <span class="badge bg-bronze" style="background: #cd7f32; color: white;"><i class="bi bi-award-fill"></i> #3</span>
+                                        {% else %}
+                                            <span class="ms-2 fw-bold text-muted">#{{ loop.index }}</span>
+                                        {% endif %}
+                                    </td>
+                                    <td><span class="extra-small fw-bold text-muted">{{ res.student.registration_number }}</span></td>
+                                    <td>
+                                        <div class="d-flex align-items-center gap-2">
+                                            <div class="avatar-circle" style="width: 28px; height: 28px; font-size: 0.75rem;">{{ res.student.user.full_name[0].upper() }}</div>
+                                            <a href="{{ url_for('analytics.student_analytics', student_id=res.student.id) }}" class="text-dark text-decoration-none fw-600 hover-lift d-block">{{ res.student.user.full_name }}</a>
+                                        </div>
+                                    </td>
+                                    <td class="text-end pe-4">
+                                        <span class="fw-800 fs-5 text-primary">{{ res.academic_total|round(1) }}</span>
+                                    </td>
+                                </tr>
+                                {% endfor %}
+                            </tbody>
+                        </table>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <div class="text-center mt-4">
+        <a href="{{ url_for('analytics.analysis_hub') }}" class="btn btn-secondary px-5 btn-lg shadow-lg">
+            <i class="bi bi-arrow-left me-2"></i> Back to Hub
+        </a>
+    </div>
+</div>
+
+{% block extra_js %}
+<script>
+// Grade Distribution Chart
+const gradeDistCtx = document.getElementById('gradeDistChart').getContext('2d');
+new Chart(gradeDistCtx, {
+    type: 'bar',
+    data: {
+        labels: {{ grade_dist.keys()|list|tojson }},
+        datasets: [{
+            label: 'No. of Students',
+            data: {{ grade_dist.values()|list|tojson }},
+            backgroundColor: 'rgba(99, 102, 241, 0.7)',
+            borderColor: '#6366f1',
+            borderWidth: 2,
+            borderRadius: 8
+        }]
+    },
+    options: {
+        responsive: true,
+        maintainAspectRatio: false,
+        plugins: { legend: { display: false } },
+        scales: {
+            y: { beginAtZero: true, ticks: { stepSize: 1 }, grid: { borderDash: [5, 5] } },
+            x: { grid: { display: false } }
+        }
+    }
+});
+
+// Component Radar Chart
+const radarCtx = document.getElementById('componentRadarChart').getContext('2d');
+new Chart(radarCtx, {
+    type: 'radar',
+    data: {
+        labels: {{ cie_avgs.keys()|list|tojson }},
+        datasets: [{
+            label: 'Class Mean',
+            data: {{ cie_avgs.values()|list|tojson }},
+            backgroundColor: 'rgba(6, 182, 212, 0.2)',
+            borderColor: '#06b6d4',
+            borderWidth: 3,
+            pointRadius: 4,
+            pointBackgroundColor: '#06b6d4'
+        }]
+    },
+    options: {
+        responsive: true,
+        maintainAspectRatio: false,
+        scales: {
+            r: { 
+                min: 0, 
+                max: 30, // Assuming CIE is out of 30 or similar
+                ticks: { display: false },
+                suggestedMax: 25
+            }
+        },
+        plugins: { legend: { display: false } }
+    }
+});
+</script>
+{% endblock %}
+{% endblock %}

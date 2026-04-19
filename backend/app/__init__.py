@@ -1,11 +1,29 @@
-from flask import Flask, redirect, url_for
-from flask_sqlalchemy import SQLAlchemy
-from flask_login import LoginManager
 import os
+import platform
+import socket
 import pymysql
+
+# Workaround for Windows WMI hang during platform detection used by SQLAlchemy imports
+if os.name == 'nt':
+    def safe_machine():
+        return os.environ.get('PROCESSOR_ARCHITECTURE', 'AMD64')
+
+    def safe_processor():
+        return os.environ.get('PROCESSOR_IDENTIFIER', '')
+
+    def safe_win32_ver(*args, **kwargs):
+        return ('10', '10.0.0', '', 'Multiprocessor Free')
+
+    platform.machine = safe_machine
+    platform.processor = safe_processor
+    platform.win32_ver = safe_win32_ver
 
 # Install pymysql as MySQLdb for compatibility
 pymysql.install_as_MySQLdb()
+
+from flask import Flask, redirect, url_for, request
+from flask_sqlalchemy import SQLAlchemy
+from flask_login import LoginManager
 
 # Initialize extensions
 db = SQLAlchemy()
@@ -21,6 +39,10 @@ def create_app(config_name=None):
     app = Flask(__name__, 
                 template_folder=template_dir, 
                 static_folder=static_dir)
+
+    @app.before_request
+    def log_request():
+        print('DEBUG: before_request', request.method, request.path)
     
     # Load configuration
     if config_name is None:

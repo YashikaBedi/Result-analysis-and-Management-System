@@ -1,115 +1,86 @@
 {% extends "base.html" %}
 
-{% block title %}Login - JIMS SEC-5 Exam Management{% endblock %}
+{% block title %}Login - JIMS SEC-5 Result Analytics{% endblock %}
 
 {% block auth_content %}
-<div class="auth-card">
-    <!-- Logo & Header -->
-    <div class="auth-header text-center mb-5">
-        <div class="logo-circle-large mb-3">
+<div class="auth-container animate-up">
+    <!-- Header Section -->
+    <div class="text-center mb-5">
+        <div class="logo-circle-large mb-4">
             <i class="bi bi-mortarboard-fill"></i>
         </div>
-        <h1 class="fw-bold mb-2">JIMS SEC-5</h1>
-        <p class="text-light opacity-75">Exam Management System</p>
+        <h1 class="display-4 fw-900 mb-2" style="color: #0f172a;">JIMS SEC-5</h1>
+        <p class="text-muted fw-500">Result Analysis & Management System</p>
     </div>
 
-    <!-- Form Card -->
-    <div class="card border-0 shadow-lg" style="border-radius: 16px;">
-        <div class="card-body p-5">
-            <h3 class="card-title text-center mb-4 fw-bold">Welcome Back</h3>
+    <!-- Login Card -->
+    <div class="auth-card mx-auto animate-up">
+        <div class="p-2">
+            <h3 class="fw-800 text-center mb-4">Welcome Back</h3>
             
-            <form method="POST" novalidate>
+            <form method="POST" novalidate class="form-premium">
                 {{ form.hidden_tag() }}
                 
-                <!-- Username Field -->
+                <!-- Username -->
                 <div class="mb-4">
-                    <label class="form-label">Username</label>
-                    {{ form.username(class="form-control form-control-lg" + (" is-invalid" if form.username.errors else ""), 
-                                    placeholder="Enter your username") }}
+                    <label class="small text-uppercase tracking-widest text-muted fw-bold mb-2 d-block">Username</label>
+                    <div class="input-group">
+                        <span class="input-group-text bg-zinc-50 border-end-0" style="border-radius: 14px 0 0 14px;">
+                            <i class="bi bi-person text-zinc-400"></i>
+                        </span>
+                        {{ form.username(class="form-control border-start-0", style="border-radius: 0 14px 14px 0;", placeholder="Enter username") }}
+                    </div>
                     {% if form.username.errors %}
-                        <div class="invalid-feedback d-block mt-2">
-                            <i class="bi bi-exclamation-circle"></i> {% for error in form.username.errors %}{{ error }}{% endfor %}
-                        </div>
+                        {% for error in form.username.errors %}
+                            <div class="text-danger small mt-1"><i class="bi bi-exclamation-circle"></i> {{ error }}</div>
+                        {% endfor %}
                     {% endif %}
                 </div>
-                
-                <!-- Password Field -->
+
+                <!-- Password -->
                 <div class="mb-4">
-                    <label class="form-label">Password</label>
-                    {{ form.password(class="form-control form-control-lg" + (" is-invalid" if form.password.errors else ""), 
-                                    placeholder="Enter your password") }}
+                    <div class="d-flex justify-content-between align-items-center mb-2">
+                        <label class="small text-uppercase tracking-widest text-muted fw-bold mb-0">Password</label>
+                        <a href="{{ url_for('auth.request_reset') }}" class="small fw-bold text-primary text-decoration-none">Forgot?</a>
+                    </div>
+                    <div class="input-group">
+                        <span class="input-group-text bg-zinc-50 border-end-0" style="border-radius: 14px 0 0 14px;">
+                            <i class="bi bi-lock text-zinc-400"></i>
+                        </span>
+                        {{ form.password(class="form-control border-start-0", style="border-radius: 0 14px 14px 0;", placeholder="••••••••") }}
+                    </div>
                     {% if form.password.errors %}
-                        <div class="invalid-feedback d-block mt-2">
-                            <i class="bi bi-exclamation-circle"></i> {% for error in form.password.errors %}{{ error }}{% endfor %}
-                        </div>
+                        {% for error in form.password.errors %}
+                            <div class="text-danger small mt-1"><i class="bi bi-exclamation-circle"></i> {{ error }}</div>
+                        {% endfor %}
                     {% endif %}
                 </div>
-                
-                <!-- Submit Button -->
-                <div class="d-grid gap-2 mb-4">
-                    {{ form.submit(class="btn btn-primary btn-lg fw-bold") }}
+
+                <!-- Submit -->
+                <div class="d-grid mb-4">
+                    {{ form.submit(class="btn btn-primary py-3 btn-lg") }}
                 </div>
-                
-                <!-- Divider -->
-                <div class="d-flex align-items-center mb-4">
-                    <hr class="flex-grow-1">
-                    <span class="mx-3 text-muted small">New to JIMS?</span>
-                    <hr class="flex-grow-1">
+
+                <!-- Footer -->
+                <div class="text-center">
+                    <p class="small text-muted mb-0">
+                        Don't have an account? 
+                        <a href="{{ url_for('auth.register') }}" class="text-primary fw-bold text-decoration-none">Create Profile</a>
+                    </p>
                 </div>
-                
-                <!-- Register Link -->
-                <p class="text-center mb-0">
-                    Don't have an account? 
-                    <a href="{{ url_for('auth.register') }}" class="fw-bold text-decoration-none" style="color: var(--primary);">Create one now</a>
-                </p>
             </form>
         </div>
     </div>
 
-    <!-- Footer Info -->
-    <p class="text-center text-light opacity-75 small mt-4">
-        Demo credentials: admin / admin123
-    </p>
+    <!-- Institutional Info -->
+    <div class="text-center mt-5 text-muted opacity-50">
+        <p class="small mb-1">&copy; 2024 Jagannath Institute of Management Sciences</p>
+        <p class="x-small">Excellence in Education & Result Analysis</p>
+    </div>
 </div>
 
 <style>
-    .auth-card {
-        width: 100%;
-        max-width: 420px;
-    }
-
-    .logo-circle-large {
-        width: 80px;
-        height: 80px;
-        background: rgba(255, 255, 255, 0.15);
-        border-radius: 20px;
-        display: flex;
-        align-items: center;
-        justify-content: center;
-        font-size: 2.5rem;
-        color: white;
-        margin: 0 auto;
-        backdrop-filter: blur(10px);
-    }
-
-    .auth-header h1 {
-        color: white;
-        font-size: 2rem;
-        letter-spacing: -0.5px;
-    }
-
-    .auth-header p {
-        font-size: 1rem;
-    }
-
-    .form-control-lg {
-        height: 48px;
-        font-size: 0.95rem;
-    }
-
-    .invalid-feedback {
-        color: #ef4444 !important;
-        font-size: 0.85rem;
-    }
+    .x-small { font-size: 0.75rem; }
+    .fw-500 { font-weight: 500; }
 </style>
 {% endblock %}

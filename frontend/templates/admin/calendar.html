@@ -1,0 +1,246 @@
+{% extends "base.html" %}
+
+{% block title %}Academic Calendar - JIMS SEC-5 Result Analytics{% endblock %}
+
+{% block content %}
+<div class="py-4 animate-up">
+    <!-- Header Section -->
+    <div class="hero-banner mb-5" style="border-radius: 20px; background: linear-gradient(135deg, var(--primary), var(--secondary));">
+        <div class="row align-items-center">
+            <div class="col">
+                <h1 class="fw-800 mb-1"><i class="bi bi-calendar-check me-2"></i> Academic Calendar</h1>
+                <p class="opacity-75 mb-0">Stay updated with the institutional schedule, examination dates, and holidays.</p>
+            </div>
+            <div class="col-auto">
+                {% if current_user.role in ['admin', 'hod'] %}
+                <button class="btn btn-light text-primary fw-bold" data-bs-toggle="modal" data-bs-target="#addEventModal">
+                    <i class="bi bi-plus-circle-fill me-1"></i> Add Event
+                </button>
+                {% endif %}
+            </div>
+        </div>
+    </div>
+
+    <!-- Filters & Stats -->
+    <div class="row g-4 mb-4 align-items-center">
+        <div class="col-md-8">
+            <div class="d-flex flex-wrap gap-2">
+                <button class="btn btn-sm btn-dark filter-btn active" data-filter="all">All Events</button>
+                {% for type, color, icon in [
+                    ('Exam', 'danger', 'bi-exclamation-square'),
+                    ('Internal', 'warning', 'bi-journal-check'),
+                    ('Holiday', 'success', 'bi-tree'),
+                    ('Workshop', 'info', 'bi-mortarboard'),
+                    ('Other', 'secondary', 'bi-dot')
+                ] %}
+                <button class="btn btn-sm btn-outline-{{ color }} filter-btn" data-filter="{{ type }}">
+                    <i class="bi {{ icon }}"></i> {{ type }}s
+                </button>
+                {% endfor %}
+            </div>
+        </div>
+        <div class="col-md-4 text-md-end">
+            <span class="text-muted small fw-bold text-uppercase tracking-widest">{{ events|length }} Events Scheduled</span>
+        </div>
+    </div>
+
+    <!-- Calendar Layout -->
+    {% if events %}
+    <div class="row g-4" id="eventsContainer">
+        {% for event in events %}
+        <div class="col-md-6 col-lg-4 event-card animate-up" data-type="{{ event.event_type }}" style="animation-delay: {{ loop.index0 * 0.05 }}s;">
+            <div class="card h-100 border-0 shadow-sm overflow-hidden" style="border-radius: 20px;">
+                <div class="p-4">
+                    <div class="d-flex justify-content-between align-items-start mb-3">
+                        <span class="badge rounded-pill px-3 py-2 extra-small text-uppercase tracking-widest
+                            {% if event.event_type == 'Exam' %}bg-danger
+                            {% elif event.event_type == 'Holiday' %}bg-success
+                            {% elif event.event_type == 'Internal' %}bg-warning text-dark
+                            {% elif event.event_type == 'Workshop' %}bg-info
+                            {% else %}bg-secondary{% endif %}">
+                            <i class="bi bi-tag-fill me-1"></i> {{ event.event_type }}
+                        </span>
+                        <div class="d-flex align-items-center gap-2">
+                           {% if current_user.role == 'admin' %}
+                           <button class="btn btn-link text-primary p-0" data-bs-toggle="modal" data-bs-target="#editEventModal{{ event.id }}">
+                               <i class="bi bi-pencil-square fs-5"></i>
+                           </button>
+                           <form method="POST" action="{{ url_for('admin.delete_calendar_event', event_id=event.id) }}" onsubmit="return confirm('Remove this event from the calendar?')">
+                               <button type="submit" class="btn btn-link text-danger p-0">
+                                   <i class="bi bi-trash fs-5"></i>
+                               </button>
+                           </form>
+                           {% endif %}
+                        </div>
+                    </div>
+                    
+                    <h5 class="fw-800 mb-2">{{ event.title }}</h5>
+                    {% if event.description %}
+                    <p class="text-muted small mb-3 lh-sm">{{ event.description }}</p>
+                    {% endif %}
+                    
+                    <div class="mt-auto pt-3 border-top d-flex align-items-center justify-content-between">
+                        <div class="d-flex align-items-center gap-2 text-primary small fw-bold">
+                            <i class="bi bi-calendar-date"></i>
+                            {{ event.start_date.strftime('%B %d, %Y') }}
+                        </div>
+                        {% if event.end_date and event.end_date != event.start_date %}
+                        <div class="text-muted x-small">Ends {{ event.end_date.strftime('%b %d') }}</div>
+                        {% endif %}
+                    </div>
+                </div>
+                
+                <!-- Bottom Decoration -->
+                <div style="height: 5px; background: {% if event.event_type == 'Exam' %}#ef4444{% elif event.event_type == 'Holiday' %}#10b981{% elif event.event_type == 'Internal' %}#f59e0b{% elif event.event_type == 'Workshop' %}#06b6d4{% else %}#64748b{% endif %}; opacity: 0.2;"></div>
+            </div>
+        </div>
+
+        {% if current_user.role == 'admin' %}
+        <!-- Edit Event Modal -->
+        <div class="modal fade" id="editEventModal{{ event.id }}" tabindex="-1">
+            <div class="modal-dialog modal-dialog-centered">
+                <div class="modal-content border-0 shadow-lg" style="border-radius: 28px;">
+                    <div class="modal-header border-0 p-4">
+                        <h5 class="modal-title fw-800"><i class="bi bi-pencil-square text-primary me-2"></i> Edit Event</h5>
+                        <button type="button" class="btn-close" data-bs-dismiss="modal"></button>
+                    </div>
+                    <div class="modal-body p-4 pt-0">
+                        <form method="POST" action="{{ url_for('admin.edit_calendar_event', event_id=event.id) }}" class="form-premium">
+                            <div class="mb-4">
+                                <label class="form-label small fw-800 text-uppercase tracking-widest text-muted">Event Title</label>
+                                <input type="text" name="title" class="form-control" value="{{ event.title }}" required>
+                            </div>
+                            
+                            <div class="mb-4">
+                                <label class="form-label small fw-800 text-uppercase tracking-widest text-muted">Event Category</label>
+                                <select name="event_type" class="form-select" required>
+                                    <option value="Exam" {% if event.event_type == 'Exam' %}selected{% endif %}>🔴 Examination</option>
+                                    <option value="Internal" {% if event.event_type == 'Internal' %}selected{% endif %}>🟡 Internal Assessment</option>
+                                    <option value="Holiday" {% if event.event_type == 'Holiday' %}selected{% endif %}>🟢 Public Holiday</option>
+                                    <option value="Workshop" {% if event.event_type == 'Workshop' %}selected{% endif %}>🔵 Workshop / Seminar</option>
+                                    <option value="Other" {% if event.event_type == 'Other' %}selected{% endif %}>⚪ Other Activity</option>
+                                </select>
+                            </div>
+                            
+                            <div class="row g-3 mb-4">
+                                <div class="col-6">
+                                    <label class="form-label small fw-800 text-uppercase tracking-widest text-muted">Start Date</label>
+                                    <input type="date" name="start_date" class="form-control" value="{{ event.start_date.strftime('%Y-%m-%d') }}" required>
+                                </div>
+                                <div class="col-6">
+                                    <label class="form-label small fw-800 text-uppercase tracking-widest text-muted">End Date</label>
+                                    <input type="date" name="end_date" class="form-control" value="{{ event.end_date.strftime('%Y-%m-%d') if event.end_date else '' }}">
+                                </div>
+                            </div>
+                            
+                            <div class="mb-4">
+                                <label class="form-label small fw-800 text-uppercase tracking-widest text-muted">Brief Description</label>
+                                <textarea name="description" class="form-control" rows="2">{{ event.description }}</textarea>
+                            </div>
+                            
+                            <div class="d-grid gap-2 mt-5">
+                                <button type="submit" class="btn btn-primary py-3 fw-bold">Update Event</button>
+                            </div>
+                        </form>
+                    </div>
+                </div>
+            </div>
+        </div>
+        {% endif %}
+        {% endfor %}
+    </div>
+    {% else %}
+    <div class="text-center py-5 glass-panel">
+        <div class="logo-circle-large mx-auto mb-4 bg-light text-muted opacity-25">
+            <i class="bi bi-calendar-x"></i>
+        </div>
+        <h4 class="fw-bold">Calendar is Empty</h4>
+        <p class="text-muted">No academic events have been scheduled yet.</p>
+        {% if current_user.role == 'admin' %}
+        <button class="btn btn-primary px-4" data-bs-toggle="modal" data-bs-target="#addEventModal">Create First Event</button>
+        {% endif %}
+    </div>
+    {% endif %}
+</div>
+
+<!-- Add Modal -->
+{% if current_user.role == 'admin' %}
+<div class="modal fade" id="addEventModal" tabindex="-1">
+    <div class="modal-dialog modal-dialog-centered">
+        <div class="modal-content border-0 shadow-lg" style="border-radius: 28px;">
+            <div class="modal-header border-0 p-4">
+                <h5 class="modal-title fw-800"><i class="bi bi-plus-circle text-primary me-2"></i> New Calendar Event</h5>
+                <button type="button" class="btn-close" data-bs-dismiss="modal"></button>
+            </div>
+            <div class="modal-body p-4 pt-0">
+                <form method="POST" action="{{ url_for('admin.create_calendar_event') }}" class="form-premium">
+                    <div class="mb-4">
+                        <label class="form-label small fw-800 text-uppercase tracking-widest text-muted">Event Title</label>
+                        <input type="text" name="title" class="form-control" placeholder="e.g., CIE-I Examination" required>
+                    </div>
+                    
+                    <div class="mb-4">
+                        <label class="form-label small fw-800 text-uppercase tracking-widest text-muted">Event Category</label>
+                        <select name="event_type" class="form-select" required>
+                            <option value="Exam">🔴 Examination</option>
+                            <option value="Internal">🟡 Internal Assessment</option>
+                            <option value="Holiday">🟢 Public Holiday</option>
+                            <option value="Workshop">🔵 Workshop / Seminar</option>
+                            <option value="Other">⚪ Other Activity</option>
+                        </select>
+                    </div>
+                    
+                    <div class="row g-3 mb-4">
+                        <div class="col-6">
+                            <label class="form-label small fw-800 text-uppercase tracking-widest text-muted">Start Date</label>
+                            <input type="date" name="start_date" class="form-control" required>
+                        </div>
+                        <div class="col-6">
+                            <label class="form-label small fw-800 text-uppercase tracking-widest text-muted">End Date (Optional)</label>
+                            <input type="date" name="end_date" class="form-control">
+                        </div>
+                    </div>
+                    
+                    <div class="mb-4">
+                        <label class="form-label small fw-800 text-uppercase tracking-widest text-muted">Brief Description</label>
+                        <textarea name="description" class="form-control" rows="2" placeholder="Tell more about this event..."></textarea>
+                    </div>
+                    
+                    <div class="d-grid gap-2 mt-5">
+                        <button type="submit" class="btn btn-primary py-3 fw-bold">Schedule Event</button>
+                    </div>
+                </form>
+            </div>
+        </div>
+    </div>
+</div>
+{% endif %}
+
+<style>
+    .bg-bronze { background: #cd7f32; color: white; }
+    .x-small { font-size: 0.7rem; }
+</style>
+
+{% block extra_js %}
+<script>
+document.querySelectorAll('.filter-btn').forEach(btn => {
+    btn.addEventListener('click', function() {
+        document.querySelectorAll('.filter-btn').forEach(b => b.classList.remove('active', 'btn-dark'));
+        document.querySelectorAll('.filter-btn').forEach(b => {
+             // Reset outline classes if needed
+        });
+        this.classList.add('active', 'btn-dark');
+        
+        const filter = this.dataset.filter;
+        document.querySelectorAll('.event-card').forEach(card => {
+            if (filter === 'all' || card.dataset.type === filter) {
+                card.classList.remove('d-none');
+            } else {
+                card.classList.add('d-none');
+            }
+        });
+    });
+});
+</script>
+{% endblock %}
+{% endblock %}

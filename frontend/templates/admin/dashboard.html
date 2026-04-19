@@ -1,242 +1,333 @@
 {% extends "base.html" %}
 
-{% block title %}Admin Dashboard - JIMS SEC-5{% endblock %}
+{% block title %}Admin Control Center - Result Management System{% endblock %}
 
 {% block content %}
-<div class="admin-dashboard">
-    <!-- Page Header -->
-    <div class="page-header mb-4">
-        <h1 class="fw-bold">Admin Dashboard</h1>
-        <p class="text-muted">System administration and management</p>
+<div class="animate-up">
+    <!-- Hero Banner -->
+    <div class="hero-banner">
+        <div class="row align-items-center">
+            <div class="col-lg-7">
+                <span class="badge-soft badge-soft-indigo mb-3 text-uppercase tracking-widest">Management Overview</span>
+                <h1 class="display-4 fw-800 tracking-tight">Admin Dashboard</h1>
+                <p>Monitor system health, manage department performance, and handle user security requests from a single interface.</p>
+            </div>
+            <div class="col-lg-5 d-none d-lg-block text-end">
+                <div class="glass-panel p-4 d-inline-block">
+                    <div class="text-white small opacity-75 mb-1">System Status</div>
+                    <div class="h4 mb-0"><i class="bi bi-check-circle-fill text-success me-2"></i>Operational</div>
+                </div>
+            </div>
+        </div>
     </div>
 
-    <!-- Statistics Cards -->
-    <div class="row mb-4">
-        <div class="col-md-3 mb-3">
+    <!-- Stats Grid -->
+    <div class="row g-4 mb-5">
+        <div class="col-md-3">
             <div class="stat-card">
-                <div class="stat-icon bg-primary">
+                <div class="stat-icon" style="background: linear-gradient(135deg, #6366f1, #4f46e5);">
                     <i class="bi bi-people"></i>
                 </div>
-                <div class="stat-content">
-                    <h3>{{ total_users }}</h3>
-                    <p>Total Users</p>
+                <div>
+                    <h3 class="fw-800 mb-0">{{ total_users }}</h3>
+                    <p class="text-zinc-500 small mb-0">Total Users</p>
                 </div>
             </div>
         </div>
-
-        <div class="col-md-3 mb-3">
+        <div class="col-md-3">
             <div class="stat-card">
-                <div class="stat-icon bg-success">
+                <div class="stat-icon" style="background: linear-gradient(135deg, #10b981, #059669);">
                     <i class="bi bi-person-check"></i>
                 </div>
-                <div class="stat-content">
-                    <h3>{{ total_students }}</h3>
-                    <p>Students</p>
+                <div>
+                    <h3 class="fw-800 mb-0">{{ total_students }}</h3>
+                    <p class="text-zinc-500 small mb-0">Students</p>
                 </div>
             </div>
         </div>
-
-        <div class="col-md-3 mb-3">
+        <div class="col-md-3">
             <div class="stat-card">
-                <div class="stat-icon bg-info">
+                <div class="stat-icon" style="background: linear-gradient(135deg, #f59e0b, #d97706);">
                     <i class="bi bi-building"></i>
                 </div>
-                <div class="stat-content">
-                    <h3>{{ total_departments }}</h3>
-                    <p>Departments</p>
+                <div>
+                    <h3 class="fw-800 mb-0">{{ total_departments }}</h3>
+                    <p class="text-zinc-500 small mb-0">Departments</p>
                 </div>
             </div>
         </div>
-
-        <div class="col-md-3 mb-3">
+        <div class="col-md-3">
             <div class="stat-card">
-                <div class="stat-icon bg-warning">
+                <div class="stat-icon" style="background: linear-gradient(135deg, #ec4899, #be185d);">
                     <i class="bi bi-book"></i>
                 </div>
-                <div class="stat-content">
-                    <h3>{{ total_courses }}</h3>
-                    <p>Courses</p>
+                <div>
+                    <h3 class="fw-800 mb-0">{{ total_courses }}</h3>
+                    <p class="text-zinc-500 small mb-0">Courses</p>
                 </div>
             </div>
         </div>
     </div>
 
-    <!-- Quick Actions -->
-    <div class="row mb-4">
-        <div class="col-md-12">
-            <div class="card border-0 shadow-sm">
-                <div class="card-header bg-light border-0">
-                    <h5 class="mb-0 fw-bold">Quick Actions</h5>
+    <div class="row g-4">
+        <!-- Main Content: Leaderboard -->
+        <div class="col-lg-8">
+            <div class="card h-100">
+                <div class="card-header d-flex justify-content-between align-items-center">
+                    <div class="d-flex align-items-center gap-2">
+                        <i class="bi bi-trophy text-warning"></i>
+                        <span>Department Performance Leaderboard</span>
+                    </div>
                 </div>
-                <div class="card-body">
-                    <div class="row g-2">
-                        <div class="col-md-3">
-                            <a href="{{ url_for('admin.manage_users') }}" class="btn btn-outline-primary w-100">
-                                <i class="bi bi-people"></i> Manage Users
-                            </a>
+                <div class="card-body p-0">
+                    <div class="table-responsive px-4 pb-4">
+                        <table class="table table-premium mb-0">
+                            <thead>
+                                <tr>
+                                    <th>Rank</th>
+                                    <th>Department</th>
+                                    <th class="text-center">Avg Score</th>
+                                    <th class="text-center">Pass Rate</th>
+                                    <th class="text-end">Students</th>
+                                </tr>
+                            </thead>
+                            <tbody>
+                                {% for dept in dept_stats %}
+                                <tr>
+                                    <td>
+                                        <span class="badge-soft {% if loop.index == 1 %}badge-soft-indigo{% else %}badge-soft-zinc{% endif %}">
+                                            #{{ loop.index }}
+                                        </span>
+                                    </td>
+                                    <td><strong>{{ dept.name }}</strong></td>
+                                    <td class="text-center">
+                                        <span class="fw-700 text-primary">{{ dept.avg_score }}</span>
+                                    </td>
+                                    <td class="text-center">
+                                        <div class="d-flex align-items-center justify-content-center gap-2">
+                                            <div class="progress w-50" style="height: 6px;">
+                                                <div class="progress-bar bg-success" style="width: {{ dept.pass_rate }}%"></div>
+                                            </div>
+                                            <span class="small fw-bold">{{ dept.pass_rate }}%</span>
+                                        </div>
+                                    </td>
+                                    <td class="text-end text-zinc-500">{{ dept.student_count }}</td>
+                                </tr>
+                                {% endfor %}
+                            </tbody>
+                        </table>
+                    </div>
+                </div>
+            </div>
+
+            <div class="row g-4 mt-2">
+                <div class="col-md-7">
+                    <div class="card border-0 shadow-sm h-100">
+                        <div class="card-header d-flex align-items-center gap-2">
+                            <i class="bi bi-bar-chart-line-fill text-primary"></i>
+                            <span>Dept. Performance Comparison</span>
                         </div>
-                        <div class="col-md-3">
-                            <a href="{{ url_for('admin.manage_departments') }}" class="btn btn-outline-primary w-100">
-                                <i class="bi bi-building"></i> Manage Departments
-                            </a>
+                        <div class="card-body">
+                            <div class="chart-container" style="position: relative; min-height: 340px;">
+                                <canvas id="deptPerformanceChart"></canvas>
+                            </div>
                         </div>
-                        <div class="col-md-3">
-                            <a href="{{ url_for('admin.view_audit_logs') }}" class="btn btn-outline-primary w-100">
-                                <i class="bi bi-clock-history"></i> Audit Logs
-                            </a>
+                    </div>
+                </div>
+                <div class="col-md-5">
+                    <div class="card border-0 shadow-sm h-100">
+                        <div class="card-header d-flex align-items-center gap-2">
+                            <i class="bi bi-pie-chart-fill text-success"></i>
+                            <span>College Grade Profile</span>
                         </div>
-                        <div class="col-md-3">
-                            <a href="{{ url_for('admin.create_department') }}" class="btn btn-outline-primary w-100">
-                                <i class="bi bi-plus-lg"></i> New Department
-                            </a>
+                        <div class="card-body d-flex align-items-center">
+                            <div class="chart-container w-100" style="position: relative; min-height: 340px;">
+                                <canvas id="collegeGradeChart"></canvas>
+                            </div>
                         </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+
+        <!-- Sidebar: Extra Stats & Actions -->
+        <div class="col-lg-4">
+            <!-- Top Students Leaderboard -->
+            <div class="card border-0 shadow-sm mb-4">
+                <div class="card-header bg-white pt-4 px-4 border-0">
+                    <h6 class="fw-800 mb-0 d-flex align-items-center gap-2">
+                        <i class="bi bi-stars text-warning"></i>
+                        Elite Performers (Top 5)
+                    </h6>
+                </div>
+                <div class="card-body px-4 pb-4">
+                    <div class="d-grid gap-3">
+                        {% for s in top_students %}
+                        <div class="d-flex align-items-center justify-content-between p-3 rounded-4 bg-zinc-50 border border-zinc-100 transition-all hover-translate-y">
+                            <div class="d-flex align-items-center gap-3">
+                                <div class="avatar-circle" style="width: 32px; height: 32px; font-size: 0.8rem;">{{ loop.index }}</div>
+                                <div>
+                                    <div class="fw-700 text-zinc-900 small">{{ s.name }}</div>
+                                    <div class="extra-small text-zinc-500">{{ s.dept }}</div>
+                                </div>
+                            </div>
+                            <div class="text-end">
+                                <div class="fw-800 text-primary">{{ s.avg }}%</div>
+                                <div class="extra-small text-zinc-400">{{ s.reg_no }}</div>
+                            </div>
+                        </div>
+                        {% endfor %}
+                    </div>
+            </div>
+
+            <!-- Top Faculty Leaderboard -->
+            <div class="card border-0 shadow-sm mb-4">
+                <div class="card-header bg-white pt-4 px-4 border-0">
+                    <h6 class="fw-800 mb-0 d-flex align-items-center gap-2">
+                        <i class="bi bi-mortarboard text-primary"></i>
+                        Faculty Leadership
+                    </h6>
+                </div>
+                <div class="card-body px-4 pb-4">
+                    <div class="d-grid gap-3">
+                        {% for f in faculty_stats %}
+                        <div class="d-flex align-items-center justify-content-between p-3 rounded-4 bg-zinc-50 border border-zinc-100 shadow-hover transition-all">
+                            <div class="d-flex align-items-center gap-3">
+                                <div class="logo-circle extra-small" style="width: 32px; height: 32px; font-size: 0.8rem;">{{ loop.index }}</div>
+                                <div>
+                                    <div class="fw-700 text-zinc-900 small">{{ f.name }}</div>
+                                    <div class="extra-small text-zinc-500">{{ f.courses }} Courses Assigned</div>
+                                </div>
+                            </div>
+                            <div class="text-end">
+                                <div class="fw-800 text-success">{{ f.avg }}%</div>
+                                <div class="extra-small text-zinc-400">Class Avg</div>
+                            </div>
+                        </div>
+                        {% endfor %}
+                    </div>
+                </div>
+            </div>
+
+            <!-- Analysis Hub Call-to-Action -->
+            <div class="card mb-4 border-0 shadow-lg overflow-hidden" style="border-radius: 20px; background: linear-gradient(135deg, var(--primary), var(--secondary));">
+                <div class="card-body p-4 text-white">
+                    <h5 class="fw-800 mb-2">Institutional Analytics</h5>
+                    <p class="small opacity-75 mb-4">Access bifurcated student performance data and Section A vs B comparisons for all courses.</p>
+                    <a href="{{ url_for('analytics.analysis_hub') }}" class="btn btn-light btn-sm w-100 fw-bold text-primary py-2">
+                        Enter Analysis Hub <i class="bi bi-arrow-right ms-1"></i>
+                    </a>
+                </div>
+            </div>
+
+            <!-- Quick Actions -->
+            <div class="card border-0 shadow-sm">
+                <div class="card-header bg-white pt-4 px-4 border-0">
+                    <h6 class="fw-800 mb-0 d-flex align-items-center gap-2">
+                        <i class="bi bi-lightning-charge text-warning"></i>
+                        Administrative Tasks
+                    </h6>
+                </div>
+                <div class="card-body px-4 pb-4">
+                    <div class="d-grid gap-2">
+                        <a href="{{ url_for('admin.manage_departments') }}" class="btn btn-soft-primary d-flex align-items-center justify-content-between mb-2">
+                            <span>Manage Departments</span>
+                            <i class="bi bi-chevron-right small"></i>
+                        </a>
+                        <a href="{{ url_for('admin.view_calendar') }}" class="btn btn-soft-primary d-flex align-items-center justify-content-between mb-2">
+                            <span>Academic Calendar</span>
+                            <i class="bi bi-chevron-right small"></i>
+                        </a>
+                        <a href="{{ url_for('results.add_marks') }}" class="btn btn-outline-secondary d-flex align-items-center justify-content-between">
+                            <span>Bulk Upload Results</span>
+                            <i class="bi bi-upload small"></i>
+                        </a>
                     </div>
                 </div>
             </div>
         </div>
     </div>
 
-    <!-- Recent Activities -->
-    <div class="row">
-        <div class="col-md-12">
-            <div class="card border-0 shadow-sm">
-                <div class="card-header bg-light border-0">
-                    <h5 class="mb-0 fw-bold">Recent Activities</h5>
-                </div>
-                <div class="card-body">
-                    {% if recent_logs %}
-                        <div class="table-responsive">
-                            <table class="table table-hover mb-0">
-                                <thead>
-                                    <tr>
-                                        <th>Action</th>
-                                        <th>Table</th>
-                                        <th>Details</th>
-                                        <th>Timestamp</th>
-                                    </tr>
-                                </thead>
-                                <tbody>
-                                    {% for log in recent_logs %}
-                                        <tr>
-                                            <td>
-                                                <span class="badge bg-info">{{ log.action }}</span>
-                                            </td>
-                                            <td>{{ log.table_name }}</td>
-                                            <td>
-                                                {% if log.user %}
-                                                    <small>By: {{ log.user.full_name }}</small>
-                                                {% else %}
-                                                    <small class="text-muted">N/A</small>
-                                                {% endif %}
-                                            </td>
-                                            <td>
-                                                <small class="text-muted">{{ log.timestamp.strftime('%Y-%m-%d %H:%M') if log.timestamp else 'N/A' }}</small>
-                                            </td>
-                                        </tr>
-                                    {% endfor %}
-                                </tbody>
-                            </table>
-                        </div>
-                    {% else %}
-                        <p class="text-muted text-center py-3">No recent activities</p>
-                    {% endif %}
-                </div>
-            </div>
-        </div>
-    </div>
 </div>
+{% endblock %}
 
-<style>
-.admin-dashboard {
-    padding: 20px;
-}
+{% block extra_js %}
+<script>
+document.addEventListener('DOMContentLoaded', function() {
+    const deptStats = {{ dept_stats|tojson }};
+    const labels = deptStats.map(d => d.name);
+    const avgScores = deptStats.map(d => d.avg_score);
+    const passRates = deptStats.map(d => d.pass_rate);
 
-.page-header {
-    border-bottom: 2px solid #f1f5f9;
-    padding-bottom: 20px;
-}
+    const ctx = document.getElementById('deptPerformanceChart').getContext('2d');
+    new Chart(ctx, {
+        type: 'bar',
+        data: {
+            labels: labels,
+            datasets: [
+                {
+                    label: 'Average Score',
+                    data: avgScores,
+                    backgroundColor: 'rgba(99, 102, 241, 0.75)',
+                    borderRadius: 12,
+                    barThickness: 24,
+                },
+                {
+                    label: 'Pass Rate',
+                    data: passRates,
+                    backgroundColor: 'rgba(236, 72, 153, 0.75)',
+                    borderRadius: 12,
+                    barThickness: 24,
+                }
+            ]
+        },
+        options: {
+            responsive: true,
+            maintainAspectRatio: false,
+            scales: {
+                y: {
+                    beginAtZero: true,
+                    max: 100,
+                    ticks: { stepSize: 20 },
+                    grid: { color: 'rgba(15, 23, 42, 0.08)' }
+                },
+                x: {
+                    grid: { display: false }
+                }
+            },
+            plugins: {
+                legend: { position: 'bottom', labels: { usePointStyle: true } },
+                tooltip: { mode: 'index', intersect: false }
+            }
+        }
+    });
 
-.stat-card {
-    background: white;
-    border-radius: 12px;
-    padding: 20px;
-    display: flex;
-    align-items: center;
-    gap: 20px;
-    box-shadow: 0 4px 12px rgba(0, 0, 0, 0.05);
-    transition: all 0.3s ease;
-    border: 1px solid #f1f5f9;
-}
-
-.stat-card:hover {
-    box-shadow: 0 8px 20px rgba(0, 0, 0, 0.1);
-    transform: translateY(-2px);
-}
-
-.stat-icon {
-    width: 60px;
-    height: 60px;
-    border-radius: 10px;
-    display: flex;
-    align-items: center;
-    justify-content: center;
-    font-size: 1.8rem;
-    color: white;
-    flex-shrink: 0;
-}
-
-.stat-icon.bg-primary {
-    background: linear-gradient(135deg, #6366f1 0%, #4f46e5 100%);
-}
-
-.stat-icon.bg-success {
-    background: linear-gradient(135deg, #10b981 0%, #059669 100%);
-}
-
-.stat-icon.bg-info {
-    background: linear-gradient(135deg, #06b6d4 0%, #0891b2 100%);
-}
-
-.stat-icon.bg-warning {
-    background: linear-gradient(135deg, #f59e0b 0%, #d97706 100%);
-}
-
-.stat-content h3 {
-    font-size: 1.8rem;
-    font-weight: 700;
-    margin-bottom: 5px;
-    color: #1e293b;
-}
-
-.stat-content p {
-    margin: 0;
-    font-size: 0.9rem;
-    color: #64748b;
-}
-
-.card {
-    border-radius: 12px;
-}
-
-.card-header {
-    border-radius: 12px 12px 0 0;
-}
-
-.btn-outline-primary {
-    border: 2px solid #6366f1;
-    color: #6366f1;
-    font-weight: 600;
-    transition: all 0.3s ease;
-}
-
-.btn-outline-primary:hover {
-    background: #6366f1;
-    color: white;
-}
-
-.table-responsive {
-    max-height: 400px;
-    overflow-y: auto;
-}
-</style>
+    // 2. College Grade Distribution
+    const collegeGradeData = {{ college_grade_dist|tojson }};
+    const ctxGrade = document.getElementById('collegeGradeChart').getContext('2d');
+    new Chart(ctxGrade, {
+        type: 'doughnut',
+        data: {
+            labels: Object.keys(collegeGradeData),
+            datasets: [{
+                data: Object.values(collegeGradeData),
+                backgroundColor: [
+                    '#10b981', '#34d399', '#6366f1', '#818cf8', '#f59e0b', '#ef4444'
+                ],
+                hoverOffset: 15,
+                borderWidth: 0
+            }]
+        },
+        options: {
+            responsive: true,
+            maintainAspectRatio: false,
+            cutout: '70%',
+            plugins: {
+                legend: { position: 'bottom', labels: { usePointStyle: true, padding: 20 } },
+                tooltip: { backgroundColor: 'rgba(15, 23, 42, 0.9)' }
+            }
+        }
+    });
+});
+</script>
 {% endblock %}

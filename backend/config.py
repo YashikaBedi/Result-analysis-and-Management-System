@@ -25,15 +25,10 @@ class Config:
 class DevelopmentConfig(Config):
     """Development configuration"""
     DEBUG = True
-    # Database URI construction
-    db_user = os.getenv('DB_USER', 'root')
-    db_password = os.getenv('DB_PASSWORD', 'password')
-    db_host = os.getenv('DB_HOST', 'localhost')
-    db_name = os.getenv('DB_NAME', 'result_management')
-    
+    # Use SQLite for quick setup
     SQLALCHEMY_DATABASE_URI = os.getenv(
         'DATABASE_URL',
-        f"mysql+pymysql://{db_user}:{quote_plus(db_password)}@{db_host}/{db_name}"
+        'sqlite:///college_exam_system.db'
     )
 
 class ProductionConfig(Config):
